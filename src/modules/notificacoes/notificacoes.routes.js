@@ -1,14 +1,15 @@
 const { Router } = require('express');
-const { authenticate, authorize } = require('../../middlewares/authenticate');
+const { authenticate } = require('../../middlewares/authenticate');
+const NotificacoesController = require('./notificacoes.controller');
+
 const router = Router();
-
-// TODO: Implementar controller e service completos
-// Placeholder — retorna 501 até implementação
-
+const ctrl = new NotificacoesController();
 router.use(authenticate);
 
-router.get('/', authorize('notificacoes', 'read'), (req, res) => res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Módulo notificacoes em desenvolvimento.' } }));
-router.put('/:id/lida', authorize('notificacoes', 'update'), (req, res) => res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Módulo notificacoes em desenvolvimento.' } }));
-router.put('/marcar-todas-lidas', authorize('notificacoes', 'update'), (req, res) => res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Módulo notificacoes em desenvolvimento.' } }));
+router.get('/',                         ctrl.listar);
+router.get('/nao-lidas',                ctrl.naoLidas);
+router.put('/:id/lida',                 ctrl.marcarLida);
+router.put('/marcar-todas-lidas',       ctrl.marcarTodasLidas);
+router.delete('/:id',                   ctrl.remover);
 
 module.exports = router;

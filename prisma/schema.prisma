@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 // =============================================================
@@ -323,6 +324,7 @@ model Tenant {
   notificacoes          Notificacao[]
   configTransparencia   ConfiguracaoTransparencia?
   publicacoesTransp     PublicacaoTransparencia[]
+  roles                 Role[]
 
   @@map("tenants")
 }
@@ -359,13 +361,17 @@ model Usuario {
 
 model Role {
   id          String   @id @default(uuid())
-  nome        String   @unique @db.VarChar(50)
+  tenantId    String?  // null = role global do sistema
+  nome        String   @db.VarChar(50)
   descricao   String?  @db.VarChar(200)
-  isSystem    Boolean  @default(false) // Roles do sistema não podem ser deletadas
+  isSystem    Boolean  @default(false)
 
-  usuarios     UsuarioRole[]
-  permissions  RolePermission[]
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  usuarios    UsuarioRole[]
+  permissions RolePermission[]
 
+  @@unique([tenantId, nome])
+  @@index([tenantId])
   @@map("roles")
 }
 
@@ -513,6 +519,7 @@ model TabelaSalarial {
   servidores  Servidor[]
 
   @@index([tenantId])
+  @@unique([tenantId, nome])
   @@map("tabelas_salariais")
 }
 
@@ -1074,6 +1081,7 @@ model PeriodoAquisitivo {
   gozos           Ferias[]
 
   @@index([servidorId])
+  @@unique([servidorId, dataInicio])
   @@map("periodos_aquisitivos")
 }
 
