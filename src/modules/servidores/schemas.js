@@ -76,4 +76,18 @@ const filtroSchema = z.object({
   }),
 });
 
+const dadosBancariosSchema = z.object({
+  params: z.object({ id: z.string().uuid() }),
+  body: z.object({
+    banco:     z.string().max(10),
+    nomeBanco: z.string().max(100),
+    agencia:   z.string().max(10),
+    conta:     z.string().max(20),
+    digito:    z.string().max(2),
+    tipoConta: z.enum(['CORRENTE', 'POUPANCA']),
+    chavePix:  z.string().max(150).optional(),
+  }),
+});
+
+
 module.exports = { criarServidorSchema, atualizarServidorSchema, filtroSchema };

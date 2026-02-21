@@ -62,9 +62,32 @@ const registrarProgressao = async (req, res) => {
   created(res, data);
 };
 
+
+const buscarDadosBancarios = async (req, res) => {
+  const data = await getService(req).buscarDadosBancarios(req.params.id);
+  success(res, data);
+};
+
+const adicionarDadosBancarios = async (req, res) => {
+  const data = await getService(req).adicionarDadosBancarios(
+    req.params.id, req.body, req.user.id
+  );
+  created(res, data);
+};
+
+const ativarConta = async (req, res) => {
+  const data = await getService(req).ativarConta(
+    req.params.id, req.params.contaId, req.user.id
+  );
+  success(res, data);
+};
+
+
+
+
 // Stubs para implementação futura
 const exportar = async (req, res) => success(res, { message: 'Exportação em desenvolvimento.' });
-const buscarDadosBancarios = async (req, res) => success(res, {});
+
 const atualizarDadosBancarios = async (req, res) => success(res, {});
 const uploadDocumento = async (req, res) => created(res, {});
 const removerDocumento = async (req, res) => noContent(res);

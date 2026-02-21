@@ -25,8 +25,9 @@ router.patch('/:id/situacao', authorize('GESTOR_RH', 'ADMIN_ORGAO'), auditLog('s
 router.delete('/:id', authorize('ADMIN_ORGAO'), auditLog('servidor'), controller.remover);
 
 // Dados bancários
-router.get('/:id/dados-bancarios', authorize('GESTOR_RH', 'ADMIN_ORGAO', 'SERVIDOR'), controller.buscarDadosBancarios);
-router.put('/:id/dados-bancarios', authorize('GESTOR_RH', 'ADMIN_ORGAO'), auditLog('dados_bancarios'), controller.atualizarDadosBancarios);
+router.get ('/:id/dados-bancarios',                   authorize('GESTOR_RH','ADMIN_ORGAO','SERVIDOR'), controller.buscarDadosBancarios);
+router.post('/:id/dados-bancarios',                   authorize('GESTOR_RH','ADMIN_ORGAO'), auditLog('dados_bancarios'), validate(dadosBancariosSchema), controller.adicionarDadosBancarios);
+router.patch('/:id/dados-bancarios/:contaId/ativar',  authorize('GESTOR_RH','ADMIN_ORGAO'), auditLog('dados_bancarios'), controller.ativarConta);
 
 // Documentos do servidor
 router.get('/:id/documentos', authorize('GESTOR_RH', 'ADMIN_ORGAO', 'SERVIDOR'), controller.listarDocumentos);

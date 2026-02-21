@@ -194,6 +194,42 @@ class ServidoresRepository {
 
     return where;
   }
+
+  // Lista todas as contas
+  async findDadosBancarios(servidorId) {
+    return this.db.dadosBancarios.findMany({
+      where: { servidorId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // Cria nova conta — desativa as anteriores em transaction
+  async createDadosBancarios(servidorId, data) {
+    return this.db.$transaction([
+      this.db.dadosBancarios.updateMany({
+        where: { servidorId, ativa: true },
+        data: { ativa: false },
+      }),
+      this.db.dadosBancarios.create({
+        data: { servidorId, ...data, ativa: true },
+      }),
+    ]);
+  }
+
+  // Ativa uma conta específica — desativa as demais
+  async ativarConta(servidorId, contaId) {
+    return this.db.$transaction([
+      this.db.dadosBancarios.updateMany({
+        where: { servidorId, ativa: true },
+        data: { ativa: false },
+      }),
+      this.db.dadosBancarios.update({
+        where: { id: contaId },
+        data: { ativa: true },
+      }),
+    ]);
+  }
+
 }
 
 module.exports = ServidoresRepository;

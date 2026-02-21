@@ -253,6 +253,28 @@ class ServidoresService {
       aprovadoEm: new Date(),
     });
   }
+  async buscarDadosBancarios(servidorId) {
+    await this.buscarPorId(servidorId);
+    return this.repo.findDadosBancarios(servidorId);
+  }
+
+  async adicionarDadosBancarios(servidorId, data, usuarioId) {
+    await this.buscarPorId(servidorId);
+    const [, novaConta] = await this.repo.createDadosBancarios(servidorId, data);
+    return novaConta;
+  }
+
+  async ativarConta(servidorId, contaId, usuarioId) {
+    await this.buscarPorId(servidorId);
+    // Valida que a conta pertence ao servidor
+    const conta = await this.db.dadosBancarios.findFirst({
+      where: { id: contaId, servidorId },
+    });
+    if (!conta) throw new AppError('Conta não encontrada.', 404);
+    const [, contaAtiva] = await this.repo.ativarConta(servidorId, contaId);
+    return contaAtiva;
+  }
+
 }
 
 function _mapSituacaoParaTipoAlteracao(situacao) {
@@ -267,5 +289,6 @@ function _mapSituacaoParaTipoAlteracao(situacao) {
   };
   return mapa[situacao] || 'MUDANCA_REGIME';
 }
+
 
 module.exports = ServidoresService;

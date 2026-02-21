@@ -613,6 +613,8 @@ enum TipoContato {
   WHATSAPP
 }
 
+
+
 model Servidor {
   id        String @id @default(uuid())
   tenantId  String
@@ -659,7 +661,7 @@ model Servidor {
   contatos          ContatoServidor[]
   enderecos         EnderecoServidor[]
   usuario           Usuario?
-  dadosBancarios    DadosBancarios?
+  dadosBancarios    DadosBancarios[]
   dependentes       Dependente[]
   documentos        DocumentoServidor[]
   progressoes       Progressao[]
@@ -795,20 +797,24 @@ model EnderecoServidor {
   @@map("enderecos_servidores")
 }
 
+
 model DadosBancarios {
   id         String   @id @default(uuid())
-  servidorId String   @unique
-  banco      String   @db.VarChar(10) // Código COMPE
+  servidorId String                        // ← remover @unique
+  banco      String   @db.VarChar(10)
   nomeBanco  String   @db.VarChar(100)
   agencia    String   @db.VarChar(10)
   conta      String   @db.VarChar(20)
   digito     String   @db.VarChar(2)
-  tipoConta  String   @db.VarChar(20) // CORRENTE, POUPANCA
+  tipoConta  String   @db.VarChar(20)
   chavePix   String?  @db.VarChar(150)
+  ativa      Boolean  @default(true)       // ← adicionar
+  createdAt  DateTime @default(now())      // ← adicionar
   updatedAt  DateTime @updatedAt
 
-  servidor Servidor @relation(fields: [servidorId], references: [id], onDelete: Cascade)
+  servidor   Servidor @relation(fields: [servidorId], references: [id], onDelete: Cascade)
 
+  @@index([servidorId])
   @@map("dados_bancarios")
 }
 
