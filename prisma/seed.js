@@ -107,8 +107,6 @@ async function main() {
       ativo:            true,
       limiteServidores: 9999,
       plano:            'ENTERPRISE',
-      exercicioAtual:   new Date().getFullYear(),
-
     },
     update: {},
   });
@@ -166,7 +164,7 @@ async function main() {
 
   const superSenha = await bcrypt.hash('Admin@2026!', 12);
   const superAdmin = await prisma.usuario.upsert({
-    where: { tenantId_email: { email: 'admin@govrh.gov.br', tenantId: tenant.id } },
+    where: { email_tenantId: { email: 'admin@govrh.gov.br', tenantId: tenant.id } },
     create: {
       tenantId: tenant.id,
       nome:     'Super Administrador',
@@ -185,7 +183,7 @@ async function main() {
   console.log('\n👤 Criando Admin do Órgão...');
   const adminSenha = await bcrypt.hash('Rh@2026Pme', 12);
   const adminOrgao = await prisma.usuario.upsert({
-    where: { tenantId_email: { email: 'rh@exemplo.gov.br', tenantId: tenant.id } },
+    where: { email_tenantId: { email: 'rh@exemplo.gov.br', tenantId: tenant.id } },
     create: {
       tenantId: tenant.id,
       nome:     'Administrador RH',
@@ -263,8 +261,8 @@ async function main() {
     create: {
       tenantId: tenant.id, grupoOcupacionalId: grupoMag.id,
       codigo: 'PROF-01', nome: 'Professor de Educação Básica I',
-      regimeJuridico: 'ESTATUTARIO', cargaHorariaSemanal: 40,
-      escolaridadeMinima: 'SUPERIOR_COMPLETO', ativo: true,
+      regimeJuridico: 'ESTATUTARIO', cargaHoraria: 40,
+      escolaridadeMinima: 'SUPERIOR', ativo: true,
       descricao: 'Docente do ensino fundamental anos iniciais',
     },
     update: {},
@@ -275,8 +273,8 @@ async function main() {
     create: {
       tenantId: tenant.id, grupoOcupacionalId: grupoAdm.id,
       codigo: 'AGADM-01', nome: 'Agente Administrativo',
-      regimeJuridico: 'ESTATUTARIO', cargaHorariaSemanal: 40,
-      escolaridadeMinima: 'MEDIO_COMPLETO', ativo: true,
+      regimeJuridico: 'ESTATUTARIO', cargaHoraria: 40,
+      escolaridadeMinima: 'MEDIO', ativo: true,
     },
     update: {},
   });
@@ -319,9 +317,8 @@ async function main() {
       nome: 'Maria da Silva Santos',
       cpf: '123.456.789-00',
       dataNascimento: new Date('1985-06-15'),
-      estadoCivil: 'CASADO',
       sexo: 'FEMININO',
-      escolaridade: 'SUPERIOR_COMPLETO',
+      escolaridade: 'SUPERIOR',
       nivelTitulacao: 'II',
       emailInstitucional: 'maria.silva@exemplo.gov.br',
       cargoId: cargoProf.id,

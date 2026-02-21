@@ -12,6 +12,7 @@ router.use(authenticate);
 router.get('/verbas',                         authorize('folha', 'read'),   ctrl.listarVerbas);
 router.post('/verbas',                        authorize('folha', 'create'), auditLog('verbas', 'create'), ctrl.criarVerba);
 router.put('/verbas/:id',                     authorize('folha', 'update'), auditLog('verbas', 'update'), ctrl.atualizarVerba);
+router.delete('/verbas/:id',                  authorize('folha', 'delete'), auditLog('verbas', 'delete'), ctrl.desativarVerba);
 
 // Configuração
 router.get('/config',                         authorize('folha', 'read'),   ctrl.getConfig);
@@ -23,15 +24,22 @@ router.post('/consignados',                   authorize('folha', 'create'), audi
 router.put('/consignados/:id',                authorize('folha', 'update'), ctrl.atualizarConsignado);
 router.delete('/consignados/:id',             authorize('folha', 'delete'), ctrl.cancelarConsignado);
 
-// Folha
+// Folha — listagem e processamento
 router.get('/',                               authorize('folha', 'read'),   ctrl.listarFolhas);
 router.post('/processar',                     authorize('folha', 'create'), auditLog('folha', 'processar'), ctrl.processar);
+
+// Itens por ID da folha — ANTES de /:competencia/:tipo (ordem crítica no Express)
+router.get('/id/:folhaId/itens',              authorize('folha', 'read'),   ctrl.listarItensPorId);
+
+// Holerite individual
+router.get('/holerite/:servidorId/:competencia', authorize('folha', 'read'), ctrl.holerite);
+
+// Folha por competencia+tipo
 router.get('/:competencia/:tipo',             authorize('folha', 'read'),   ctrl.buscarFolha);
 router.get('/:competencia/:tipo/itens',       authorize('folha', 'read'),   ctrl.listarItens);
+router.get('/:competencia/:tipo/analitico',   authorize('folha', 'read'),   ctrl.relatorioAnalitico);
+router.get('/:competencia/:tipo/sintetico',   authorize('folha', 'read'),   ctrl.relatorioSintetico);
 router.post('/:competencia/:tipo/fechar',     authorize('folha', 'update'), auditLog('folha', 'fechar'), ctrl.fechar);
 router.post('/:competencia/:tipo/reabrir',    authorize('folha', 'update'), auditLog('folha', 'reabrir'), ctrl.reabrir);
-
-// Holerite
-router.get('/holerite/:servidorId/:competencia', authorize('folha', 'read'), ctrl.holerite);
 
 module.exports = router;

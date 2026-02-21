@@ -19,95 +19,178 @@ class ServidoresService {
     return servidor;
   }
 
-  async criar(data, usuarioId) {
-    // Verifica CPF duplicado no tenant
-    const cpfExiste = await this.repo.findByCpf(data.cpf?.replace(/\D/g, ''));
+  async criar(data, tenantId, usuarioId) {
+    const {
+      regimeJuridico,
+      cargoId,
+      tabelaSalarialId,
+      nivelSalarialId,
+      lotacaoId,
+      dataAdmissao,
+      dataPosse,
+      dataExercicio,
+      dataTermino,
+      cargaHorariaSemanal,
+      turno,
+      nivelTitulacao,
+      titulacaoComprovada,
+      portaria,
+      lei,
+      observacao,
+      emailPessoal,
+      emailInstitucional,
+      celular,
+      ...dadosPessoais
+    } = data;
+
+    const cpfLimpo = dadosPessoais.cpf?.replace(/\D/g, '');
+    const cpfExiste = await this.repo.findByCpf(cpfLimpo);
     if (cpfExiste) throw new AppError('CPF já cadastrado neste órgão.', 409);
 
-    // Gera matrícula automática
     const matricula = await this.repo.gerarMatricula();
 
     const servidor = await this.repo.create({
-      ...data,
-      cpf: data.cpf.replace(/\D/g, ''),
+      ...dadosPessoais,
+      cpf: cpfLimpo,
       matricula,
+      tenantId,
     });
 
-    // Registra histórico de criação
-    await this.repo.createHistorico({
+    const vinculo = await this.repo.createVinculo({
       servidorId: servidor.id,
-      tenantId: servidor.tenantId,
-      dataAlteracao: new Date(),
+      tenantId,
+      regimeJuridico,
+      cargoId,
+      tabelaSalarialId,
+      nivelSalarialId,
+      lotacaoId,
+      dataAdmissao,
+      dataPosse: dataPosse || null,
+      dataExercicio: dataExercicio || null,
+      dataTermino: dataTermino || null,
+      cargaHoraria: cargaHorariaSemanal || 40,
+      turno: turno || 'INTEGRAL',
+      nivelTitulacao: nivelTitulacao || null,
+      titulacaoComprovada: titulacaoComprovada || null,
+      portaria: portaria || null,
+      lei: lei || null,
+      observacao: observacao || null,
+      situacaoFuncional: 'ATIVO',
       tipoAlteracao: 'ADMISSAO',
-      descricao: 'Admissão/Cadastro inicial do servidor',
-      cargoNovoId: servidor.cargoId,
-      lotacaoNovaId: servidor.lotacaoId,
-      nivelSalarialNovoId: servidor.nivelSalarialId,
-      vencimentoNovo: servidor.nivelSalarial?.vencimentoBase,
-      situacaoNova: 'ATIVO',
-      usuarioId,
+      atual: true,
+      registradoPor: usuarioId,
     });
 
-    return servidor;
+    const contatos = [];
+    if (emailPessoal) contatos.push({ tipo: 'EMAIL_PESSOAL', valor: emailPessoal, principal: true });
+    if (emailInstitucional) contatos.push({ tipo: 'EMAIL_INSTITUCIONAL', valor: emailInstitucional });
+    if (celular) contatos.push({ tipo: 'CELULAR', valor: celular });
+
+    if (contatos.length > 0) {
+      await this.db.contatoServidor.createMany({
+        data: contatos.map((c) => ({ ...c, servidorId: servidor.id })),
+      });
+    }
+
+    return { ...servidor, vinculoAtual: vinculo };
   }
 
   async atualizar(id, data, usuarioId) {
-    const atual = await this.buscarPorId(id);
+    const {
+      regimeJuridico,
+      cargoId,
+      tabelaSalarialId,
+      nivelSalarialId,
+      lotacaoId,
+      dataAdmissao,
+      dataPosse,
+      dataExercicio,
+      dataTermino,
+      cargaHorariaSemanal,
+      turno,
+      nivelTitulacao,
+      titulacaoComprovada,
+      portaria,
+      lei,
+      observacao: obsVinculo,
+      ...dadosPessoais
+    } = data;
 
-    // Detecta e registra mudanças relevantes no histórico
-    const mudancas = this._detectarMudancas(atual, data);
+    const dadosFuncionais = {
+      regimeJuridico,
+      cargoId,
+      tabelaSalarialId,
+      nivelSalarialId,
+      lotacaoId,
+      dataAdmissao,
+      dataPosse,
+      dataExercicio,
+      dataTermino,
+      cargaHoraria: cargaHorariaSemanal,
+      turno,
+      nivelTitulacao,
+      titulacaoComprovada,
+      portaria,
+      lei,
+      observacao: obsVinculo,
+    };
 
-    const servidor = await this.repo.update(id, data);
+    const temDadosPessoais = Object.values(dadosPessoais).some((v) => v !== undefined);
+    const temDadosFuncionais = Object.values(dadosFuncionais).some((v) => v !== undefined);
 
-    if (mudancas.length > 0) {
-      for (const mudanca of mudancas) {
-        await this.repo.createHistorico({
-          servidorId: id,
-          tenantId: atual.tenantId,
-          dataAlteracao: new Date(),
-          usuarioId,
-          ...mudanca,
-        });
-      }
+    let servidor;
+    if (temDadosPessoais) {
+      const payload = Object.fromEntries(Object.entries(dadosPessoais).filter(([, v]) => v !== undefined));
+      servidor = await this.repo.update(id, payload);
+    } else {
+      servidor = await this.buscarPorId(id);
     }
 
-    return servidor;
+    if (temDadosFuncionais) {
+      const vinculoAtual = await this.repo.findVinculoAtual(id);
+      if (!vinculoAtual) throw new AppError('Vínculo funcional ativo não encontrado.', 404);
+
+      const payload = Object.fromEntries(Object.entries(dadosFuncionais).filter(([, v]) => v !== undefined));
+      await this.repo.updateVinculo(vinculoAtual.id, { ...payload, registradoPor: usuarioId });
+    }
+
+    return this.buscarPorId(id);
   }
 
   async alterarSituacao(id, { situacao, motivo, data, portaria }, usuarioId) {
     const servidor = await this.buscarPorId(id);
+    const vinculoAtual = await this.repo.findVinculoAtual(id);
+    if (!vinculoAtual) throw new AppError('Vínculo funcional ativo não encontrado.', 404);
 
-    await this.repo.update(id, {
+    const atualizacaoVinculo = {
       situacaoFuncional: situacao,
-      ...(situacao === 'EXONERADO' && { dataExoneracao: data, motivoExoneracao: motivo }),
-    });
+      registradoPor: usuarioId,
+    };
 
-    await this.repo.createHistorico({
-      servidorId: id,
-      tenantId: servidor.tenantId,
-      dataAlteracao: data || new Date(),
-      tipoAlteracao: 'SITUACAO',
-      descricao: `Alteração de situação: ${servidor.situacaoFuncional} → ${situacao}`,
-      situacaoAnterior: servidor.situacaoFuncional,
-      situacaoNova: situacao,
-      portaria,
-      observacao: motivo,
-      usuarioId,
-    });
+    if (['EXONERADO', 'APOSENTADO', 'FALECIDO', 'RESCISAO'].includes(situacao)) {
+      atualizacaoVinculo.dataEncerramento = data ? new Date(data) : new Date();
+      atualizacaoVinculo.motivoEncerramento = motivo || null;
+      atualizacaoVinculo.portaria = portaria || null;
+      atualizacaoVinculo.atual = false;
+      atualizacaoVinculo.tipoAlteracao = _mapSituacaoParaTipoAlteracao(situacao);
+    }
+
+    await this.repo.updateVinculo(vinculoAtual.id, atualizacaoVinculo);
 
     return { message: 'Situação funcional atualizada com sucesso.' };
   }
 
   async registrarProgressao(servidorId, data, usuarioId) {
-    const servidor = await this.buscarPorId(servidorId);
+    await this.buscarPorId(servidorId);
 
-    // Valida se a progressão é possível (nível destino existe)
+    const vinculoAtual = await this.repo.findVinculoAtual(servidorId);
+    if (!vinculoAtual) throw new AppError('Vínculo funcional ativo não encontrado.', 404);
+
     const nivelDestino = await this.db.nivelSalarial.findUnique({
       where: { id: data.nivelSalarialDestId },
     });
     if (!nivelDestino) throw new AppError('Nível salarial de destino não encontrado.', 404);
 
-    // Valida interstício mínimo para progressão horizontal
     if (['HORIZONTAL_ANTIGUIDADE', 'HORIZONTAL_MERITO', 'HORIZONTAL_CAPACITACAO'].includes(data.tipo)) {
       const ultimaProgressao = await this.db.progressao.findFirst({
         where: { servidorId, statusAprovacao: 'APROVADO' },
@@ -116,7 +199,7 @@ class ServidoresService {
 
       if (ultimaProgressao) {
         const mesesDesde = dayjs().diff(dayjs(ultimaProgressao.dataEfetivacao), 'month');
-        const intersticio = servidor.nivelSalarial?.intersticio || 24;
+        const intersticio = vinculoAtual.nivelSalarial?.intersticio || 24;
         if (mesesDesde < intersticio) {
           throw new AppError(
             `Interstício mínimo de ${intersticio} meses não atingido. Faltam ${intersticio - mesesDesde} meses.`,
@@ -128,21 +211,20 @@ class ServidoresService {
 
     const progressao = await this.repo.createProgressao({
       servidorId,
-      cargoId: servidor.cargoId,
-      nivelSalarialOriId: servidor.nivelSalarialId,
+      cargoId: vinculoAtual.cargoId,
+      nivelSalarialOriId: vinculoAtual.nivelSalarialId,
       ...data,
     });
 
-    // Se aprovação automática (ENQUADRAMENTO), já efetiva
     if (['ENQUADRAMENTO_INICIAL', 'REENQUADRAMENTO_LEI'].includes(data.tipo)) {
-      await this._efetivarProgressao(servidor, progressao, nivelDestino, usuarioId);
+      await this._efetivarProgressao(servidorId, vinculoAtual, progressao, nivelDestino, usuarioId);
     }
 
     return progressao;
   }
 
   async historico(servidorId) {
-    await this.buscarPorId(servidorId); // valida existência
+    await this.buscarPorId(servidorId);
     return this.repo.findHistorico(servidorId);
   }
 
@@ -156,61 +238,34 @@ class ServidoresService {
   // =============================================================
   // PRIVADOS
   // =============================================================
-  async _efetivarProgressao(servidor, progressao, nivelDestino, usuarioId) {
-    await this.repo.update(servidor.id, {
+  async _efetivarProgressao(servidorId, vinculoAtual, progressao, nivelDestino, usuarioId) {
+    const atualizacaoVinculo = {
       nivelSalarialId: nivelDestino.id,
-      ...(progressao.nivelNovo && { nivelTitulacao: progressao.nivelNovo }),
-    });
+      registradoPor: usuarioId,
+    };
+    if (progressao.nivelNovo) {
+      atualizacaoVinculo.nivelTitulacao = progressao.nivelNovo;
+    }
 
-    await this.repo.update(progressao.id, { statusAprovacao: 'APROVADO', aprovadoEm: new Date() });
-
-    await this.repo.createHistorico({
-      servidorId: servidor.id,
-      tenantId: servidor.tenantId,
-      dataAlteracao: new Date(),
-      tipoAlteracao: 'PROGRESSAO',
-      descricao: `Progressão ${progressao.tipo}: ${servidor.nivelSalarial?.nivel}/${servidor.nivelSalarial?.classe} → ${nivelDestino.nivel}/${nivelDestino.classe}`,
-      nivelSalarialAntId: servidor.nivelSalarialId,
-      nivelSalarialNovoId: nivelDestino.id,
-      vencimentoAnterior: servidor.nivelSalarial?.vencimentoBase,
-      vencimentoNovo: nivelDestino.vencimentoBase,
-      usuarioId,
+    await this.repo.updateVinculo(vinculoAtual.id, atualizacaoVinculo);
+    await this.repo.updateProgressao(progressao.id, {
+      statusAprovacao: 'APROVADO',
+      aprovadoEm: new Date(),
     });
   }
+}
 
-  _detectarMudancas(atual, novo) {
-    const mudancas = [];
-
-    if (novo.cargoId && novo.cargoId !== atual.cargoId) {
-      mudancas.push({
-        tipoAlteracao: 'CARGO',
-        descricao: 'Alteração de cargo',
-        cargoAnteriorId: atual.cargoId,
-        cargoNovoId: novo.cargoId,
-      });
-    }
-
-    if (novo.lotacaoId && novo.lotacaoId !== atual.lotacaoId) {
-      mudancas.push({
-        tipoAlteracao: 'LOTACAO',
-        descricao: 'Alteração de lotação',
-        lotacaoAnteriorId: atual.lotacaoId,
-        lotacaoNovaId: novo.lotacaoId,
-      });
-    }
-
-    if (novo.nivelSalarialId && novo.nivelSalarialId !== atual.nivelSalarialId) {
-      mudancas.push({
-        tipoAlteracao: 'SALARIO',
-        descricao: 'Alteração de nível salarial',
-        nivelSalarialAntId: atual.nivelSalarialId,
-        nivelSalarialNovoId: novo.nivelSalarialId,
-        vencimentoAnterior: atual.nivelSalarial?.vencimentoBase,
-      });
-    }
-
-    return mudancas;
-  }
+function _mapSituacaoParaTipoAlteracao(situacao) {
+  const mapa = {
+    EXONERADO: 'EXONERACAO',
+    APOSENTADO: 'APOSENTADORIA',
+    FALECIDO: 'FALECIMENTO',
+    RESCISAO: 'RESCISAO',
+    AFASTADO: 'AFASTAMENTO',
+    CEDIDO: 'CESSAO',
+    SUSPENSO: 'SUSPENSAO',
+  };
+  return mapa[situacao] || 'MUDANCA_REGIME';
 }
 
 module.exports = ServidoresService;

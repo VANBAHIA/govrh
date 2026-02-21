@@ -9,9 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider          = "mysql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // =============================================================
@@ -74,9 +73,9 @@ enum TipoVerba {
 
 enum TipoProgressao {
   // --- Progressão Horizontal (avanço de classe, mesmo nível) ---
-  HORIZONTAL_ANTIGUIDADE        // Por interstício/tempo de serviço
-  HORIZONTAL_MERITO             // Por avaliação de desempenho aprovada
-  HORIZONTAL_CAPACITACAO        // Por pontos/certificação de cursos
+  HORIZONTAL_ANTIGUIDADE // Por interstício/tempo de serviço
+  HORIZONTAL_MERITO // Por avaliação de desempenho aprovada
+  HORIZONTAL_CAPACITACAO // Por pontos/certificação de cursos
 
   // --- Progressão Vertical (mudança de nível por nova titulação) ---
   // Magistério: Art. 31 §5º — automática após estágio probatório
@@ -87,9 +86,9 @@ enum TipoProgressao {
   PROMOCAO_VERTICAL
 
   // --- Enquadramentos ---
-  ENQUADRAMENTO_INICIAL           // Na posse: posição conforme titulação (Art. 32)
-  ENQUADRAMENTO_TEMPO_SERVICO     // Especial: 20+ anos no magistério → Classe C (Art. 32 §1º)
-  REENQUADRAMENTO_LEI             // Revisão por novo PCCV ou lei municipal
+  ENQUADRAMENTO_INICIAL // Na posse: posição conforme titulação (Art. 32)
+  ENQUADRAMENTO_TEMPO_SERVICO // Especial: 20+ anos no magistério → Classe C (Art. 32 §1º)
+  REENQUADRAMENTO_LEI // Revisão por novo PCCV ou lei municipal
 }
 
 enum StatusAprovacao {
@@ -230,9 +229,9 @@ enum TipoOcorrenciaPonto {
 }
 
 enum NivelInsalubridade {
-  MINIMO    // 10%
-  MEDIO     // 20%
-  MAXIMO    // 40%
+  MINIMO // 10%
+  MEDIO // 20%
+  MAXIMO // 40%
 }
 
 enum Escolaridade {
@@ -289,70 +288,72 @@ enum TipoDependente {
 // =============================================================
 
 model Tenant {
-  id                String    @id @default(uuid())
-  cnpj              String    @unique @db.VarChar(18)
-  razaoSocial       String    @db.VarChar(200)
-  nomeFantasia      String?   @db.VarChar(200)
-  tipoOrgao         TipoOrgao
-  esfera            String    @db.VarChar(20) // MUNICIPAL, ESTADUAL, FEDERAL
-  uf                String    @db.Char(2)
-  municipio         String    @db.VarChar(100)
-  cep               String?   @db.VarChar(9)
-  endereco          String?   @db.VarChar(300)
-  telefone          String?   @db.VarChar(20)
-  emailContato      String?   @db.VarChar(150)
-  logoUrl           String?   @db.VarChar(500)
-  ativo             Boolean   @default(true)
-  plano             String    @default("BASICO") @db.VarChar(50)
-  limiteServidores  Int       @default(500)
-  exercicioAtual    Int       // Ano fiscal corrente
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(uuid())
+  cnpj             String    @unique @db.VarChar(18)
+  razaoSocial      String    @db.VarChar(200)
+  nomeFantasia     String?   @db.VarChar(200)
+  tipoOrgao        TipoOrgao
+  esfera           String    @db.VarChar(20) // MUNICIPAL, ESTADUAL, FEDERAL
+  uf               String    @db.Char(2)
+  municipio        String    @db.VarChar(100)
+  cep              String?   @db.VarChar(9)
+  endereco         String?   @db.VarChar(300)
+  telefone         String?   @db.VarChar(20)
+  emailContato     String?   @db.VarChar(150)
+  logoUrl          String?   @db.VarChar(500)
+  ativo            Boolean   @default(true)
+  plano            String    @default("BASICO") @db.VarChar(50)
+  limiteServidores Int       @default(500)
+  exercicioAtual   Int // Ano fiscal corrente
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   // Relacionamentos
-  usuarios              Usuario[]
-  servidores            Servidor[]
-  cargos                Cargo[]
-  gruposOcupacionais    GrupoOcupacional[]
-  tabelasSalariais      TabelaSalarial[]
-  lotacoes              Lotacao[]
-  verbas                Verba[]
-  folhasPagamento       FolhaPagamento[]
-  configuracaoFolha     ConfiguracaoFolha?
-  concursos             ConcursoPublico[]
-  auditLogs             AuditLog[]
-  notificacoes          Notificacao[]
-  configTransparencia   ConfiguracaoTransparencia?
-  publicacoesTransp     PublicacaoTransparencia[]
-  roles                 Role[]
+  usuarios            Usuario[]
+  servidores          Servidor[]
+  cargos              Cargo[]
+  gruposOcupacionais  GrupoOcupacional[]
+  tabelasSalariais    TabelaSalarial[]
+  lotacoes            Lotacao[]
+  verbas              Verba[]
+  folhasPagamento     FolhaPagamento[]
+  configuracaoFolha   ConfiguracaoFolha?
+  concursos           ConcursoPublico[]
+  auditLogs           AuditLog[]
+  notificacoes        Notificacao[]
+  configTransparencia ConfiguracaoTransparencia?
+  publicacoesTransp   PublicacaoTransparencia[]
+  roles               Role[]
+  niveisComissionados NivelComissionado[]
+  gratificacoesFuncao GratificacaoFuncao[]
 
   @@map("tenants")
 }
 
 model Usuario {
-  id             String    @id @default(uuid())
-  tenantId       String
-  nome           String    @db.VarChar(150)
-  email          String    @db.VarChar(150)
-  senhaHash      String    @db.VarChar(255)
-  ativo          Boolean   @default(true)
-  mfaAtivado     Boolean   @default(false)
-  mfaSecret      String?   @db.VarChar(100)
-  tentativasLogin Int      @default(0)
-  bloqueadoAte   DateTime?
-  ultimoLogin    DateTime?
-  refreshToken   String?   @db.VarChar(500)
-  servidorId     String?   @unique // Vínculo com servidor (self-service)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  tenantId        String
+  nome            String    @db.VarChar(150)
+  email           String    @db.VarChar(150)
+  senhaHash       String    @db.VarChar(255)
+  ativo           Boolean   @default(true)
+  mfaAtivado      Boolean   @default(false)
+  mfaSecret       String?   @db.VarChar(100)
+  tentativasLogin Int       @default(0)
+  bloqueadoAte    DateTime?
+  ultimoLogin     DateTime?
+  refreshToken    String?   @db.VarChar(500)
+  servidorId      String?   @unique // Vínculo com servidor (self-service)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  tenant         Tenant    @relation(fields: [tenantId], references: [id])
-  servidor       Servidor? @relation(fields: [servidorId], references: [id])
-  roles          UsuarioRole[]
-  auditLogs      AuditLog[]
-  aprovacoes     EtapaAprovacao[]
-  assinaturas    AssinaturaDigital[]
-  notificacoes   Notificacao[]
+  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  servidor     Servidor?           @relation(fields: [servidorId], references: [id])
+  roles        UsuarioRole[]
+  auditLogs    AuditLog[]
+  aprovacoes   EtapaAprovacao[]
+  assinaturas  AssinaturaDigital[]
+  notificacoes Notificacao[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -360,13 +361,13 @@ model Usuario {
 }
 
 model Role {
-  id          String   @id @default(uuid())
-  tenantId    String?  // null = role global do sistema
-  nome        String   @db.VarChar(50)
-  descricao   String?  @db.VarChar(200)
-  isSystem    Boolean  @default(false)
+  id        String  @id @default(uuid())
+  tenantId  String? // null = role global do sistema
+  nome      String  @db.VarChar(50)
+  descricao String? @db.VarChar(200)
+  isSystem  Boolean @default(false)
 
-  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  tenant      Tenant?          @relation(fields: [tenantId], references: [id])
   usuarios    UsuarioRole[]
   permissions RolePermission[]
 
@@ -376,12 +377,12 @@ model Role {
 }
 
 model Permission {
-  id       String @id @default(uuid())
-  recurso  String @db.VarChar(100) // Ex: "servidores", "folha", "ponto"
-  acao     String @db.VarChar(50)  // Ex: "create", "read", "update", "delete"
+  id        String  @id @default(uuid())
+  recurso   String  @db.VarChar(100) // Ex: "servidores", "folha", "ponto"
+  acao      String  @db.VarChar(50) // Ex: "create", "read", "update", "delete"
   descricao String? @db.VarChar(200)
 
-  roles    RolePermission[]
+  roles RolePermission[]
 
   @@unique([recurso, acao])
   @@map("permissions")
@@ -391,8 +392,8 @@ model UsuarioRole {
   usuarioId String
   roleId    String
 
-  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([usuarioId, roleId])
   @@map("usuario_roles")
@@ -402,28 +403,28 @@ model RolePermission {
   roleId       String
   permissionId String
 
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
 }
 
 model AuditLog {
-  id         String   @id @default(uuid())
-  tenantId   String
-  usuarioId  String?
-  recurso    String   @db.VarChar(100)
-  acao       String   @db.VarChar(50)
-  registroId String?  @db.VarChar(100)
-  dadosAntes Json?    // Snapshot antes da alteração
-  dadosDepois Json?   // Snapshot após a alteração
-  ip         String?  @db.VarChar(45)
-  userAgent  String?  @db.VarChar(300)
-  createdAt  DateTime @default(now())
+  id          String   @id @default(uuid())
+  tenantId    String
+  usuarioId   String?
+  recurso     String   @db.VarChar(100)
+  acao        String   @db.VarChar(50)
+  registroId  String?  @db.VarChar(100)
+  dadosAntes  Json? // Snapshot antes da alteração
+  dadosDepois Json? // Snapshot após a alteração
+  ip          String?  @db.VarChar(45)
+  userAgent   String?  @db.VarChar(300)
+  createdAt   DateTime @default(now())
 
-  tenant     Tenant   @relation(fields: [tenantId], references: [id])
-  usuario    Usuario? @relation(fields: [usuarioId], references: [id])
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
 
   @@index([tenantId])
   @@index([tenantId, recurso])
@@ -433,20 +434,20 @@ model AuditLog {
 }
 
 model Notificacao {
-  id         String           @id @default(uuid())
-  tenantId   String
-  usuarioId  String
-  tipo       TipoNotificacao
-  titulo     String           @db.VarChar(200)
-  mensagem   String           @db.Text
-  lida       Boolean          @default(false)
-  lidaEm     DateTime?
-  link       String?          @db.VarChar(500)
-  metadados  Json?
-  createdAt  DateTime         @default(now())
+  id        String          @id @default(uuid())
+  tenantId  String
+  usuarioId String
+  tipo      TipoNotificacao
+  titulo    String          @db.VarChar(200)
+  mensagem  String          @db.Text
+  lida      Boolean         @default(false)
+  lidaEm    DateTime?
+  link      String?         @db.VarChar(500)
+  metadados Json?
+  createdAt DateTime        @default(now())
 
-  tenant     Tenant           @relation(fields: [tenantId], references: [id])
-  usuario    Usuario          @relation(fields: [usuarioId], references: [id])
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
 
   @@index([tenantId, usuarioId, lida])
   @@map("notificacoes")
@@ -457,15 +458,15 @@ model Notificacao {
 // =============================================================
 
 model GrupoOcupacional {
-  id          String  @id @default(uuid())
-  tenantId    String
-  codigo      String  @db.VarChar(20)
-  nome        String  @db.VarChar(100)
-  descricao   String? @db.VarChar(300)
-  ativo       Boolean @default(true)
+  id        String  @id @default(uuid())
+  tenantId  String
+  codigo    String  @db.VarChar(20)
+  nome      String  @db.VarChar(100)
+  descricao String? @db.VarChar(300)
+  ativo     Boolean @default(true)
 
-  tenant      Tenant  @relation(fields: [tenantId], references: [id])
-  cargos      Cargo[]
+  tenant Tenant  @relation(fields: [tenantId], references: [id])
+  cargos Cargo[]
 
   @@unique([tenantId, codigo])
   @@index([tenantId])
@@ -473,30 +474,29 @@ model GrupoOcupacional {
 }
 
 model Cargo {
-  id                  String     @id @default(uuid())
+  id                  String         @id @default(uuid())
   tenantId            String
   grupoOcupacionalId  String
-  codigo              String     @db.VarChar(20)
-  nome                String     @db.VarChar(150)
-  descricao           String?    @db.Text
-  cbo                 String?    @db.VarChar(10)   // Classificação Brasileira de Ocupações
+  codigo              String         @db.VarChar(20)
+  nome                String         @db.VarChar(150)
+  descricao           String?        @db.Text
+  cbo                 String?        @db.VarChar(10) // Classificação Brasileira de Ocupações
   escolaridadeMinima  Escolaridade
   regimeJuridico      RegimeJuridico
-  cargaHorariaSemanal Int        @default(40)
-  isComissionado      Boolean    @default(false)
-  simboloCC           String?    @db.VarChar(10)   // CC-1, CC-2 (para comissionados)
-  quantidadeVagas     Int        @default(0)
-  quantidadeProvida   Int        @default(0)
-  ativo               Boolean    @default(true)
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
+  cargaHorariaSemanal Int            @default(40)
+  isComissionado      Boolean        @default(false)
+  simboloCC           String?        @db.VarChar(10) // CC-1, CC-2 (para comissionados)
+  quantidadeVagas     Int            @default(0)
+  quantidadeProvida   Int            @default(0)
+  ativo               Boolean        @default(true)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
-  tenant              Tenant          @relation(fields: [tenantId], references: [id])
-  grupoOcupacional    GrupoOcupacional @relation(fields: [grupoOcupacionalId], references: [id])
-  servidores          Servidor[]
-  historicosCargo     HistoricoFuncional[]
-  progressoes         Progressao[]
-  candidatos          Candidato[]
+  tenant           Tenant             @relation(fields: [tenantId], references: [id])
+  grupoOcupacional GrupoOcupacional   @relation(fields: [grupoOcupacionalId], references: [id])
+  vinculos         VinculoFuncional[]
+  progressoes      Progressao[]
+  candidatos       Candidato[]
 
   @@unique([tenantId, codigo])
   @@index([tenantId])
@@ -504,53 +504,54 @@ model Cargo {
 }
 
 model TabelaSalarial {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   tenantId    String
-  nome        String   @db.VarChar(100)
-  descricao   String?  @db.VarChar(300)
-  vigenciaIni DateTime @db.Date
+  nome        String    @db.VarChar(100)
+  descricao   String?   @db.VarChar(300)
+  regime      String    @default("ESTATUTARIO") @db.VarChar(30)
+  vigenciaIni DateTime  @db.Date
   vigenciaFim DateTime? @db.Date
-  ativa       Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  ativa       Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  niveis      NivelSalarial[]
-  servidores  Servidor[]
+  tenant   Tenant             @relation(fields: [tenantId], references: [id])
+  niveis   NivelSalarial[]
+  vinculos VinculoFuncional[]
 
-  @@index([tenantId])
   @@unique([tenantId, nome])
+  @@index([tenantId])
   @@map("tabelas_salariais")
 }
 
 model NivelSalarial {
-  id               String  @id @default(uuid())
+  id               String @id @default(uuid())
   tabelaSalarialId String
 
   // --- Dimensão 1: NÍVEL (pessoal, vinculado à titulação) ---
   // Geral:     I, II, III...  (referências numéricas ou alfanuméricas)
   // Magistério: I=Médio Normal, II=Licenciatura, III=Pós Lato, IV=Mestrado, V=Doutorado
   // Art. 31 §3º: o nível é pessoal e NÃO se altera com promoção horizontal
-  nivel            String  @db.VarChar(10)  // "I", "II", "III", "IV", "V" ou "1","2"...
+  nivel String @db.VarChar(10) // "I", "II", "III", "IV", "V" ou "1","2"...
 
   // --- Dimensão 2: CLASSE (progressão horizontal, avança por mérito/tempo) ---
   // Nível I do Magistério: A, B, C
   // Níveis II-V do Magistério: A, B, C, D, E
   // Outros planos: A, B, C, D, E ou I, II, III...
-  classe           String  @db.VarChar(5)   // "A", "B", "C", "D", "E"
+  classe String @db.VarChar(5) // "A", "B", "C", "D", "E"
 
-  vencimentoBase   Decimal @db.Decimal(12, 2)
-  percentualProxClasse Decimal @db.Decimal(5, 2) @default(5.00)  // % de aumento entre classes
-  percentualProxNivel  Decimal @db.Decimal(5, 2) @default(0.00)  // % de aumento entre níveis
+  vencimentoBase       Decimal @db.Decimal(12, 2)
+  percentualProxClasse Decimal @default(5.00) @db.Decimal(5, 2) // % de aumento entre classes
+  percentualProxNivel  Decimal @default(0.00) @db.Decimal(5, 2) // % de aumento entre níveis
 
   // Interstício mínimo para progressão horizontal nesta posição (em meses)
   // Configurável por tabela/plano de carreira
-  intersticio      Int     @default(24) // 24 meses = 2 anos (padrão)
+  intersticio Int @default(24) // 24 meses = 2 anos (padrão)
 
-  tabelaSalarial   TabelaSalarial @relation(fields: [tabelaSalarialId], references: [id])
-  servidores       Servidor[]
-  progressoesOrigem  Progressao[] @relation("ProgressaoOrigem")
-  progressoesDestino Progressao[] @relation("ProgressaoDestino")
+  tabelaSalarial     TabelaSalarial     @relation(fields: [tabelaSalarialId], references: [id])
+  vinculos           VinculoFuncional[]
+  progressoesOrigem  Progressao[]       @relation("ProgressaoOrigem")
+  progressoesDestino Progressao[]       @relation("ProgressaoDestino")
 
   // Unique por tabela + nível + classe: garante que cada célula da matriz existe uma vez
   @@unique([tabelaSalarialId, nivel, classe])
@@ -559,20 +560,19 @@ model NivelSalarial {
 }
 
 model Lotacao {
-  id          String  @id @default(uuid())
-  tenantId    String
-  codigo      String  @db.VarChar(20)
-  nome        String  @db.VarChar(150)
-  sigla       String? @db.VarChar(20)
+  id           String  @id @default(uuid())
+  tenantId     String
+  codigo       String  @db.VarChar(20)
+  nome         String  @db.VarChar(150)
+  sigla        String? @db.VarChar(20)
   lotacaoPaiId String?
-  nivel       Int     @default(1) // 1=Secretaria, 2=Departamento, 3=Seção
-  ativo       Boolean @default(true)
+  nivel        Int     @default(1) // 1=Secretaria, 2=Departamento, 3=Seção
+  ativo        Boolean @default(true)
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  lotacaoPai  Lotacao? @relation("HierarquiaLotacao", fields: [lotacaoPaiId], references: [id])
-  sublotacoes Lotacao[] @relation("HierarquiaLotacao")
-  servidores  Servidor[]
-  historicos  HistoricoFuncional[]
+  tenant      Tenant             @relation(fields: [tenantId], references: [id])
+  lotacaoPai  Lotacao?           @relation("HierarquiaLotacao", fields: [lotacaoPaiId], references: [id])
+  sublotacoes Lotacao[]          @relation("HierarquiaLotacao")
+  vinculos    VinculoFuncional[]
 
   @@unique([tenantId, codigo])
   @@index([tenantId])
@@ -583,135 +583,231 @@ model Lotacao {
 // DOMÍNIO 3 — SERVIDOR (ENTIDADE CENTRAL)
 // =============================================================
 
+enum TipoAlteracaoVinculo {
+  ADMISSAO
+  REINTEGRACAO
+  POSSE
+  EXERCICIO
+  PROGRESSAO_HORIZONTAL
+  PROGRESSAO_VERTICAL
+  ENQUADRAMENTO
+  TRANSFERENCIA_LOTACAO
+  MUDANCA_REGIME
+  MUDANCA_JORNADA
+  MUDANCA_CARGO
+  AFASTAMENTO
+  RETORNO_AFASTAMENTO
+  SUSPENSAO
+  CESSAO
+  APOSENTADORIA
+  EXONERACAO
+  FALECIMENTO
+  RESCISAO
+}
+
+enum TipoContato {
+  EMAIL_PESSOAL
+  EMAIL_INSTITUCIONAL
+  CELULAR
+  TELEFONE_FIXO
+  WHATSAPP
+}
+
 model Servidor {
-  id                  String            @id @default(uuid())
-  tenantId            String
-  matricula           String            @db.VarChar(20)
+  id        String @id @default(uuid())
+  tenantId  String
+  matricula String @db.VarChar(20)
 
-  // Dados pessoais
-  nome                String            @db.VarChar(150)
-  nomeSocial          String?           @db.VarChar(150)
-  cpf                 String            @db.VarChar(14)
-  rg                  String?           @db.VarChar(20)
-  rgOrgaoEmissor      String?           @db.VarChar(20)
-  rgUf                String?           @db.Char(2)
-  rgDataEmissao       DateTime?         @db.Date
-  dataNascimento      DateTime          @db.Date
-  naturalidade        String?           @db.VarChar(100)
-  nacionalidade       String            @default("BRASILEIRA") @db.VarChar(50)
-  sexo                Sexo
-  estadoCivil         EstadoCivil
-  corRaca             CorRaca           @default(NAO_INFORMADO)
-  escolaridade        Escolaridade
-  pne                 Boolean           @default(false)
-  tipoPne             String?           @db.VarChar(200)
-  fotoUrl             String?           @db.VarChar(500)
+  // Dados pessoais (imutáveis ou raramente alterados)
+  nome           String      @db.VarChar(150)
+  nomeSocial     String?     @db.VarChar(150)
+  cpf            String      @db.VarChar(14)
+  rg             String?     @db.VarChar(20)
+  rgOrgaoEmissor String?     @db.VarChar(20)
+  rgUf           String?     @db.Char(2)
+  rgDataEmissao  DateTime?   @db.Date
+  dataNascimento DateTime    @db.Date
+  naturalidade   String?     @db.VarChar(100)
+  nacionalidade  String      @default("BRASILEIRA") @db.VarChar(50)
+  sexo           Sexo
+  estadoCivil    EstadoCivil
+  corRaca        CorRaca     @default(NAO_INFORMADO)
+  pne            Boolean     @default(false)
+  tipoPne        String?     @db.VarChar(200)
+  fotoUrl        String?     @db.VarChar(500)
 
-  // Contato
-  emailPessoal        String?           @db.VarChar(150)
-  emailInstitucional  String?           @db.VarChar(150)
-  telefonePessoal     String?           @db.VarChar(20)
-  celular             String?           @db.VarChar(20)
+  // Documentos trabalhistas
+  numeroCtps    String? @db.VarChar(20)
+  serieCtps     String? @db.VarChar(10)
+  ufCtps        String? @db.Char(2)
+  pisPasep      String? @db.VarChar(14)
+  tituloEleitor String? @db.VarChar(20)
+  matriculaRpps String? @db.VarChar(20)
+  matriculaInss String? @db.VarChar(20)
 
-  // Endereço
-  cep                 String?           @db.VarChar(9)
-  logradouro          String?           @db.VarChar(200)
-  numero              String?           @db.VarChar(10)
-  complemento         String?           @db.VarChar(100)
-  bairro              String?           @db.VarChar(100)
-  municipio           String?           @db.VarChar(100)
-  uf                  String?           @db.Char(2)
+  // Mandato político (agentes políticos)
+  inicioMandato DateTime? @db.Date
+  fimMandato    DateTime? @db.Date
+  cargo_mandato String?   @db.VarChar(100)
 
-  // Dados funcionais
-  regimeJuridico      RegimeJuridico
-  situacaoFuncional   SituacaoFuncional @default(ATIVO)
-  cargoId             String
-  tabelaSalarialId    String
-  nivelSalarialId     String
-  lotacaoId           String
-  dataAdmissao        DateTime          @db.Date
-  dataPosse           DateTime?         @db.Date
-  dataExercicio       DateTime?         @db.Date
-  dataTermino         DateTime?         @db.Date // Para temporários/estagiários
-  dataExoneracao      DateTime?         @db.Date
-  motivoExoneracao    String?           @db.VarChar(300)
-  cargaHorariaSemanal Int               @default(40)
-  turno               TurnoTrabalho     @default(INTEGRAL)
-  numeroCtps          String?           @db.VarChar(20) // Para celetistas
-  serieCtps           String?           @db.VarChar(10)
-  ufCtps              String?           @db.Char(2)
-  pisPasep            String?           @db.VarChar(14)
-  tituloEleitor       String?           @db.VarChar(20)
-
-  // Previdência
-  matriculaRpps       String?           @db.VarChar(20)
-  matriculaInss       String?           @db.VarChar(20)
-
-  // Mandato (para agentes políticos)
-  inicioMandato       DateTime?         @db.Date
-  fimMandato          DateTime?         @db.Date
-  cargo_mandato       String?           @db.VarChar(100) // Prefeito, Vereador, etc.
-
-  // Nível pessoal por titulação (relevante para Magistério e outros planos de carreira)
-  // Art. 31 §3º: o nível é pessoal e não se altera com a progressão horizontal
-  // Armazena o nível atual do servidor com base na titulação comprovada
-  nivelTitulacao      String?           @db.VarChar(10)  // "I", "II", "III", "IV", "V"
-  titulacaoComprovada Escolaridade?     // Titulação que embasou o nível atual
-  dataTitulacao       DateTime?         @db.Date         // Data da última mudança de nível
-
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  tenant              Tenant            @relation(fields: [tenantId], references: [id])
-  cargo               Cargo             @relation(fields: [cargoId], references: [id])
-  tabelaSalarial      TabelaSalarial    @relation(fields: [tabelaSalarialId], references: [id])
-  nivelSalarial       NivelSalarial     @relation(fields: [nivelSalarialId], references: [id])
-  lotacao             Lotacao           @relation(fields: [lotacaoId], references: [id])
-  usuario             Usuario?
-  dadosBancarios      DadosBancarios?
-  dependentes         Dependente[]
-  documentos          DocumentoServidor[]
-  historicoFuncional  HistoricoFuncional[]
-  progressoes         Progressao[]
-  itensFolha          ItemFolha[]
-  registrosPonto      RegistroPonto[]
-  bancosHoras         BancoHoras[]
-  periodoAquisitivo   PeriodoAquisitivo[]
-  ferias              Ferias[]
-  licencas            Licenca[]
-  solicitacoes        SolicitacaoAprovacao[]
-  concursoPosse       Candidato?
-  estagioProbatorio   EstagioProbatorio?
-  aposentadoria       Aposentadoria?
-  pensaoConcedida     Pensao?           @relation("ServidorOrigem")
-  processosDisc       ProcessoDisciplinar[]
-  documentosAssinar   DocumentoAssinatura[] @relation("DocumentoServidor")
-  assinaturas         AssinaturaDigital[]
-  consignados         Consignado[]
+  tenant            Tenant                 @relation(fields: [tenantId], references: [id])
+  vinculos          VinculoFuncional[]
+  contatos          ContatoServidor[]
+  enderecos         EnderecoServidor[]
+  usuario           Usuario?
+  dadosBancarios    DadosBancarios?
+  dependentes       Dependente[]
+  documentos        DocumentoServidor[]
+  progressoes       Progressao[]
+  itensFolha        ItemFolha[]
+  registrosPonto    RegistroPonto[]
+  bancosHoras       BancoHoras[]
+  periodoAquisitivo PeriodoAquisitivo[]
+  ferias            Ferias[]
+  licencas          Licenca[]
+  solicitacoes      SolicitacaoAprovacao[]
+  concursoPosse     Candidato?
+  estagioProbatorio EstagioProbatorio?
+  aposentadoria     Aposentadoria?
+  pensaoConcedida   Pensao?                @relation("ServidorOrigem")
+  processosDisc     ProcessoDisciplinar[]
+  documentosAssinar DocumentoAssinatura[]  @relation("DocumentoServidor")
+  assinaturas       AssinaturaDigital[]
+  consignados       Consignado[]
 
   @@unique([tenantId, matricula])
   @@unique([tenantId, cpf])
   @@index([tenantId])
-  @@index([tenantId, situacaoFuncional])
-  @@index([tenantId, regimeJuridico])
-  @@index([tenantId, lotacaoId])
   @@map("servidores")
 }
 
+// ─────────────────────────────────────────────────────────────
+// VÍNCULO FUNCIONAL
+// Cada registro representa um período funcional completo.
+// Um servidor pode ter múltiplos vínculos (ex: temporário → estatutário).
+// Absorve e substitui o HistoricoFuncional.
+// ─────────────────────────────────────────────────────────────
+model VinculoFuncional {
+  id         String @id @default(uuid())
+  servidorId String
+  tenantId   String
+
+  // Dados do vínculo
+  regimeJuridico    RegimeJuridico
+  situacaoFuncional SituacaoFuncional @default(ATIVO)
+  cargoId           String
+  tabelaSalarialId  String
+  nivelSalarialId   String
+  lotacaoId         String
+  cargaHoraria      Int               @default(40)
+  turno             TurnoTrabalho     @default(INTEGRAL)
+
+  // Titulação (Magistério / PCCV)
+  nivelTitulacao      String?       @db.VarChar(10) // "I","II","III","IV","V"
+  titulacaoComprovada Escolaridade?
+  urlComprovante      String?       @db.VarChar(500)
+
+  // Comissionados
+  nivelComissionadoId   String?  // FK → NivelComissionado (símbolo: CC-1, CCNS, etc.)
+  gratificacaoFuncaoId  String?  // FK → GratificacaoFuncao (GF-1 a GF-N)
+
+  // Datas do ciclo funcional deste vínculo
+  dataAdmissao       DateTime  @db.Date
+  dataPosse          DateTime? @db.Date
+  dataExercicio      DateTime? @db.Date
+  dataTermino        DateTime? @db.Date // Previsto (temporários)
+  dataEncerramento   DateTime? @db.Date // Real (exoneração, rescisão, aposentadoria)
+  motivoEncerramento String?   @db.VarChar(300)
+
+  // Controle
+  atual         Boolean              @default(true)
+  tipoAlteracao TipoAlteracaoVinculo
+  portaria      String?              @db.VarChar(100)
+  lei           String?              @db.VarChar(100)
+  observacao    String?              @db.VarChar(500)
+  registradoPor String?              @db.VarChar(150) // usuarioId
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  // Relacionamentos
+  servidor           Servidor            @relation(fields: [servidorId], references: [id])
+  cargo              Cargo               @relation(fields: [cargoId], references: [id])
+  tabelaSalarial     TabelaSalarial      @relation(fields: [tabelaSalarialId], references: [id])
+  nivelSalarial      NivelSalarial       @relation(fields: [nivelSalarialId], references: [id])
+  lotacao            Lotacao             @relation(fields: [lotacaoId], references: [id])
+  nivelComissionado  NivelComissionado?  @relation(fields: [nivelComissionadoId], references: [id])
+  gratificacaoFuncao GratificacaoFuncao? @relation(fields: [gratificacaoFuncaoId], references: [id])
+
+  @@index([servidorId])
+  @@index([servidorId, atual])
+  @@index([tenantId, situacaoFuncional])
+  @@index([tenantId, lotacaoId])
+  @@map("vinculos_funcionais")
+}
+
+// ─────────────────────────────────────────────────────────────
+// CONTATOS DO SERVIDOR
+// Lista com flag "principal". Histórico preservado via createdAt/updatedAt.
+// ─────────────────────────────────────────────────────────────
+model ContatoServidor {
+  id         String      @id @default(uuid())
+  servidorId String
+  tipo       TipoContato
+  valor      String      @db.VarChar(200)
+  principal  Boolean     @default(false)
+  ativo      Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  servidor Servidor @relation(fields: [servidorId], references: [id], onDelete: Cascade)
+
+  @@index([servidorId])
+  @@index([servidorId, tipo])
+  @@map("contatos_servidores")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENDEREÇOS DO SERVIDOR
+// Lista com flag "principal". Histórico via createdAt/updatedAt.
+// ─────────────────────────────────────────────────────────────
+model EnderecoServidor {
+  id          String   @id @default(uuid())
+  servidorId  String
+  cep         String?  @db.VarChar(9)
+  logradouro  String   @db.VarChar(200)
+  numero      String   @db.VarChar(10)
+  complemento String?  @db.VarChar(100)
+  bairro      String   @db.VarChar(100)
+  municipio   String   @db.VarChar(100)
+  uf          String   @db.Char(2)
+  principal   Boolean  @default(false)
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  servidor Servidor @relation(fields: [servidorId], references: [id], onDelete: Cascade)
+
+  @@index([servidorId])
+  @@map("enderecos_servidores")
+}
+
 model DadosBancarios {
-  id         String  @id @default(uuid())
-  servidorId String  @unique
-  banco      String  @db.VarChar(10)  // Código COMPE
-  nomeBanco  String  @db.VarChar(100)
-  agencia    String  @db.VarChar(10)
-  conta      String  @db.VarChar(20)
-  digito     String  @db.VarChar(2)
-  tipoConta  String  @db.VarChar(20)  // CORRENTE, POUPANCA
-  chavePix   String? @db.VarChar(150)
+  id         String   @id @default(uuid())
+  servidorId String   @unique
+  banco      String   @db.VarChar(10) // Código COMPE
+  nomeBanco  String   @db.VarChar(100)
+  agencia    String   @db.VarChar(10)
+  conta      String   @db.VarChar(20)
+  digito     String   @db.VarChar(2)
+  tipoConta  String   @db.VarChar(20) // CORRENTE, POUPANCA
+  chavePix   String?  @db.VarChar(150)
   updatedAt  DateTime @updatedAt
 
-  servidor   Servidor @relation(fields: [servidorId], references: [id], onDelete: Cascade)
+  servidor Servidor @relation(fields: [servidorId], references: [id], onDelete: Cascade)
 
   @@map("dados_bancarios")
 }
@@ -733,8 +829,8 @@ model Dependente {
   motivoFim         String?        @db.VarChar(200)
   ativo             Boolean        @default(true)
 
-  servidor          Servidor       @relation(fields: [servidorId], references: [id], onDelete: Cascade)
-  pensoes           Pensao[]
+  servidor Servidor @relation(fields: [servidorId], references: [id], onDelete: Cascade)
+  pensoes  Pensao[]
 
   @@index([servidorId])
   @@map("dependentes")
@@ -755,7 +851,7 @@ model DocumentoServidor {
   ativo        Boolean   @default(true)
   createdAt    DateTime  @default(now())
 
-  servidor     Servidor  @relation(fields: [servidorId], references: [id], onDelete: Cascade)
+  servidor Servidor @relation(fields: [servidorId], references: [id], onDelete: Cascade)
 
   @@index([servidorId])
   @@map("documentos_servidores")
@@ -765,45 +861,7 @@ model DocumentoServidor {
 // DOMÍNIO 4 — HISTÓRICO FUNCIONAL (TRILHA COMPLETA)
 // =============================================================
 
-model HistoricoFuncional {
-  id                String    @id @default(uuid())
-  servidorId        String
-  tenantId          String
-  dataAlteracao     DateTime  @db.Date
-  tipoAlteracao     String    @db.VarChar(100) // CARGO, SALARIO, LOTACAO, SITUACAO, REGIME, JORNADA
-  descricao         String    @db.VarChar(300)
-
-  // Campos anteriores (snapshot)
-  cargoAnteriorId   String?
-  lotacaoAnteriorId String?
-  nivelSalarialAntId String?
-  vencimentoAnterior Decimal?  @db.Decimal(12, 2)
-  situacaoAnterior  SituacaoFuncional?
-  jornadadAnterior  Int?
-
-  // Campos novos
-  cargoNovoId       String?
-  lotacaoNovaId     String?
-  nivelSalarialNovoId String?
-  vencimentoNovo    Decimal?  @db.Decimal(12, 2)
-  situacaoNova      SituacaoFuncional?
-  jornadaNova       Int?
-
-  // Referência legal
-  portaria          String?   @db.VarChar(100)
-  lei               String?   @db.VarChar(100)
-  observacao        String?   @db.VarChar(500)
-  usuarioId         String?   // Quem registrou
-  createdAt         DateTime  @default(now())
-
-  servidor          Servidor  @relation(fields: [servidorId], references: [id])
-  cargoAnterior     Cargo?    @relation(fields: [cargoAnteriorId], references: [id])
-  lotacaoAnterior   Lotacao?  @relation(fields: [lotacaoAnteriorId], references: [id])
-
-  @@index([servidorId])
-  @@index([tenantId, dataAlteracao])
-  @@map("historico_funcional")
-}
+// HistoricoFuncional removido — substituído por VinculoFuncional
 
 model Progressao {
   id                  String         @id @default(uuid())
@@ -815,34 +873,34 @@ model Progressao {
 
   // --- Campos para VERTICAL_TITULACAO (Art. 31 §5º - Magistério) ---
   // Quando o tipo é VERTICAL_TITULACAO, registra qual titulação gerou a mudança de nível
-  nivelAnterior       String?        @db.VarChar(10)  // "I", "II", "III"...
-  nivelNovo           String?        @db.VarChar(10)  // "II", "III", "IV"...
-  titulacaoApresentada Escolaridade?  // Diploma que embasou a mudança de nível
-  urlComprovante      String?        @db.VarChar(500) // Link do diploma/certificado
+  nivelAnterior        String?       @db.VarChar(10) // "I", "II", "III"...
+  nivelNovo            String?       @db.VarChar(10) // "II", "III", "IV"...
+  titulacaoApresentada Escolaridade? // Diploma que embasou a mudança de nível
+  urlComprovante       String?       @db.VarChar(500) // Link do diploma/certificado
 
   // --- Campos para HORIZONTAL_CAPACITACAO ---
-  pontosCapacitacao   Int?           // Pontos acumulados em cursos (quando aplicável)
+  pontosCapacitacao Int? // Pontos acumulados em cursos (quando aplicável)
 
   // --- Campos para ENQUADRAMENTO_TEMPO_SERVICO (Art. 32 §1º) ---
   // Professor com 20+ anos → enquadrado diretamente na Classe C
-  anosServico         Int?           // Anos de serviço que justificaram o enquadramento
+  anosServico Int? // Anos de serviço que justificaram o enquadramento
 
-  dataCompetencia     DateTime       @db.Date
-  dataEfetivacao      DateTime?      @db.Date
+  dataCompetencia   DateTime        @db.Date
+  dataEfetivacao    DateTime?       @db.Date
   // Art. 31 §5º: vigora no exercício seguinte ao da apresentação do comprovante
-  exercicioVigencia   Int?           // Ano de vigência da mudança de nível
-  portaria            String?        @db.VarChar(100)
-  lei                 String?        @db.VarChar(100)
-  observacao          String?        @db.VarChar(500)
-  statusAprovacao     StatusAprovacao @default(PENDENTE)
-  aprovadoPor         String?        @db.VarChar(150)
-  aprovadoEm          DateTime?
-  createdAt           DateTime       @default(now())
+  exercicioVigencia Int? // Ano de vigência da mudança de nível
+  portaria          String?         @db.VarChar(100)
+  lei               String?         @db.VarChar(100)
+  observacao        String?         @db.VarChar(500)
+  statusAprovacao   StatusAprovacao @default(PENDENTE)
+  aprovadoPor       String?         @db.VarChar(150)
+  aprovadoEm        DateTime?
+  createdAt         DateTime        @default(now())
 
-  servidor            Servidor       @relation(fields: [servidorId], references: [id])
-  cargo               Cargo          @relation(fields: [cargoId], references: [id])
-  nivelOrigem         NivelSalarial  @relation("ProgressaoOrigem", fields: [nivelSalarialOriId], references: [id])
-  nivelDestino        NivelSalarial  @relation("ProgressaoDestino", fields: [nivelSalarialDestId], references: [id])
+  servidor     Servidor      @relation(fields: [servidorId], references: [id])
+  cargo        Cargo         @relation(fields: [cargoId], references: [id])
+  nivelOrigem  NivelSalarial @relation("ProgressaoOrigem", fields: [nivelSalarialOriId], references: [id])
+  nivelDestino NivelSalarial @relation("ProgressaoDestino", fields: [nivelSalarialDestId], references: [id])
 
   @@index([servidorId])
   @@index([servidorId, tipo])
@@ -854,44 +912,47 @@ model Progressao {
 // =============================================================
 
 model ConfiguracaoFolha {
-  id                    String  @id @default(uuid())
-  tenantId              String  @unique
-  diaFechamentoFolha    Int     @default(25)
-  diaPagamento          Int     @default(30)
-  percentualRpps        Decimal @db.Decimal(5, 2) @default(14.00)
-  percentualRppsPatronal Decimal @db.Decimal(5, 2) @default(22.00)
-  aliquotaFgts          Decimal @db.Decimal(5, 2) @default(8.00)
-  margemConsignavel     Decimal @db.Decimal(5, 2) @default(35.00) // % da remuneração
-  adiantamentoPerc      Decimal @db.Decimal(5, 2) @default(40.00)
-  tabelaIrrf            Json    // Array de faixas IRRF vigente
-  tabelaInss            Json    // Array de faixas INSS vigente
-  updatedAt             DateTime @updatedAt
+  id                     String   @id @default(uuid())
+  tenantId               String   @unique
+  diaFechamentoFolha     Int      @default(25)
+  diaPagamento           Int      @default(30)
+  percentualRpps         Decimal  @default(14.00) @db.Decimal(5, 2)
+  percentualRppsPatronal Decimal  @default(22.00) @db.Decimal(5, 2)
+  aliquotaFgts           Decimal  @default(8.00) @db.Decimal(5, 2)
+  margemConsignavel      Decimal  @default(35.00) @db.Decimal(5, 2) // % da remuneração
+  adiantamentoPerc       Decimal  @default(40.00) @db.Decimal(5, 2)
+  tabelaIrrf             Json // Array de faixas IRRF vigente
+  tabelaInss             Json // Array de faixas INSS vigente
+  tabelaSalarioFamilia   Json? // Array { ate: number, valor: number }
+  updatedAt              DateTime @updatedAt
 
-  tenant                Tenant  @relation(fields: [tenantId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@map("configuracoes_folha")
 }
 
 model Verba {
-  id             String    @id @default(uuid())
-  tenantId       String
-  codigo         String    @db.VarChar(10)
-  nome           String    @db.VarChar(150)
-  descricao      String?   @db.VarChar(300)
-  tipo           TipoVerba
-  incideIrrf     Boolean   @default(false)
-  incideRpps     Boolean   @default(false)
-  incideInss     Boolean   @default(false)
-  incideFgts     Boolean   @default(false)
-  incide13       Boolean   @default(false)
-  incideFerias   Boolean   @default(false)
-  formula        String?   @db.Text  // Fórmula de cálculo em expressão
-  isFixo         Boolean   @default(false) // Lançado automaticamente
-  ativo          Boolean   @default(true)
-  createdAt      DateTime  @default(now())
+  id           String    @id @default(uuid())
+  tenantId     String
+  codigo       String    @db.VarChar(10)
+  nome         String    @db.VarChar(150)
+  descricao    String?   @db.VarChar(300)
+  tipo         TipoVerba
+  incideIrrf   Boolean   @default(false)
+  incideRpps   Boolean   @default(false)
+  incideInss   Boolean   @default(false)
+  incideFgts   Boolean   @default(false)
+  incide13     Boolean   @default(false)
+  incideFerias Boolean   @default(false)
+  formula      String?   @db.Text // Fórmula de cálculo em expressão
+  isFixo       Boolean   @default(false) // Lançado automaticamente
+  isSistema    Boolean   @default(false) // Verba reservada — não pode ser editada/excluída
+  codigoSistema String?  @unique @db.VarChar(30) // Identificador único global (ex: SYS_VENC_BASE)
+  ativo        Boolean   @default(true)
+  createdAt    DateTime  @default(now())
 
-  tenant         Tenant    @relation(fields: [tenantId], references: [id])
-  itensFolha     ItemFolhaVerba[]
+  tenant     Tenant           @relation(fields: [tenantId], references: [id])
+  itensFolha ItemFolhaVerba[]
 
   @@unique([tenantId, codigo])
   @@index([tenantId])
@@ -899,24 +960,24 @@ model Verba {
 }
 
 model FolhaPagamento {
-  id            String      @id @default(uuid())
-  tenantId      String
-  competencia   String      @db.VarChar(7)  // YYYY-MM
-  tipo          TipoFolha
-  status        StatusFolha @default(ABERTA)
-  totalProventos Decimal    @db.Decimal(14, 2) @default(0)
-  totalDescontos Decimal    @db.Decimal(14, 2) @default(0)
-  totalLiquido  Decimal     @db.Decimal(14, 2) @default(0)
-  totalServid   Int         @default(0)
-  processadaEm  DateTime?
-  fechadaEm     DateTime?
-  observacao    String?     @db.VarChar(500)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id             String      @id @default(uuid())
+  tenantId       String
+  competencia    String      @db.VarChar(7) // YYYY-MM
+  tipo           TipoFolha
+  status         StatusFolha @default(ABERTA)
+  totalProventos Decimal     @default(0) @db.Decimal(14, 2)
+  totalDescontos Decimal     @default(0) @db.Decimal(14, 2)
+  totalLiquido   Decimal     @default(0) @db.Decimal(14, 2)
+  totalServid    Int         @default(0)
+  processadaEm   DateTime?
+  fechadaEm      DateTime?
+  observacao     String?     @db.VarChar(500)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  tenant        Tenant      @relation(fields: [tenantId], references: [id])
-  itens         ItemFolha[]
-  publicacoes   PublicacaoTransparencia[]
+  tenant      Tenant                    @relation(fields: [tenantId], references: [id])
+  itens       ItemFolha[]
+  publicacoes PublicacaoTransparencia[]
 
   @@unique([tenantId, competencia, tipo])
   @@index([tenantId])
@@ -925,19 +986,19 @@ model FolhaPagamento {
 }
 
 model ItemFolha {
-  id              String   @id @default(uuid())
+  id               String  @id @default(uuid())
   folhaPagamentoId String
-  servidorId      String
-  totalProventos  Decimal  @db.Decimal(12, 2) @default(0)
-  totalDescontos  Decimal  @db.Decimal(12, 2) @default(0)
-  totalLiquido    Decimal  @db.Decimal(12, 2) @default(0)
-  baseIrrf        Decimal  @db.Decimal(12, 2) @default(0)
-  baseRppsInss    Decimal  @db.Decimal(12, 2) @default(0)
-  baseFgts        Decimal  @db.Decimal(12, 2) @default(0)
+  servidorId       String
+  totalProventos   Decimal @default(0) @db.Decimal(12, 2)
+  totalDescontos   Decimal @default(0) @db.Decimal(12, 2)
+  totalLiquido     Decimal @default(0) @db.Decimal(12, 2)
+  baseIrrf         Decimal @default(0) @db.Decimal(12, 2)
+  baseRppsInss     Decimal @default(0) @db.Decimal(12, 2)
+  baseFgts         Decimal @default(0) @db.Decimal(12, 2)
 
-  folhaPagamento  FolhaPagamento @relation(fields: [folhaPagamentoId], references: [id])
-  servidor        Servidor       @relation(fields: [servidorId], references: [id])
-  verbas          ItemFolhaVerba[]
+  folhaPagamento FolhaPagamento   @relation(fields: [folhaPagamentoId], references: [id])
+  servidor       Servidor         @relation(fields: [servidorId], references: [id])
+  verbas         ItemFolhaVerba[]
 
   @@unique([folhaPagamentoId, servidorId])
   @@index([servidorId])
@@ -949,34 +1010,78 @@ model ItemFolhaVerba {
   itemFolhaId String
   verbaId     String
   valor       Decimal  @db.Decimal(12, 2)
-  quantidade  Decimal? @db.Decimal(8, 2) // Horas, dias, etc.
-  referencia  Decimal? @db.Decimal(12, 2) // Valor base de referência
+  quantidade  Decimal? @db.Decimal(8, 2)
+  referencia  Decimal? @db.Decimal(12, 2)
   observacao  String?  @db.VarChar(300)
 
-  itemFolha   ItemFolha @relation(fields: [itemFolhaId], references: [id], onDelete: Cascade)
-  verba       Verba     @relation(fields: [verbaId], references: [id])
+  itemFolha ItemFolha @relation(fields: [itemFolhaId], references: [id], onDelete: Cascade)
+  verba     Verba     @relation(fields: [verbaId], references: [id])
 
   @@index([itemFolhaId])
   @@map("itens_folha_verbas")
 }
 
 model Consignado {
-  id                String   @id @default(uuid())
-  servidorId        String
-  credor            String   @db.VarChar(150)
-  numeroContrato    String   @db.VarChar(50)
-  valorParcela      Decimal  @db.Decimal(10, 2)
-  totalParcelas     Int
-  parcelaAtual      Int      @default(1)
-  dataInicio        DateTime @db.Date
-  dataFim           DateTime @db.Date
-  ativo             Boolean  @default(true)
-  createdAt         DateTime @default(now())
+  id             String   @id @default(uuid())
+  servidorId     String
+  credor         String   @db.VarChar(150)
+  numeroContrato String   @db.VarChar(50)
+  valorParcela   Decimal  @db.Decimal(10, 2)
+  totalParcelas  Int
+  parcelaAtual   Int      @default(1)
+  dataInicio     DateTime @db.Date
+  dataFim        DateTime @db.Date
+  ativo          Boolean  @default(true)
+  createdAt      DateTime @default(now())
 
-  servidor          Servidor @relation(fields: [servidorId], references: [id])
+  servidor Servidor @relation(fields: [servidorId], references: [id])
 
   @@index([servidorId])
   @@map("consignados")
+}
+
+// Tabela de símbolos de cargos comissionados (CCNS-E, CCNS, CC-1 … CC-N)
+// Flexível: vencimento editável, histórico de vigência por tenant
+model NivelComissionado {
+  id          String    @id @default(uuid())
+  tenantId    String
+  simbolo     String    @db.VarChar(20)  // "CCNS-E", "CCNS", "CC-1" … "CC-7"
+  denominacao String    @db.VarChar(150) // "Cargo Comissionado Nível Superior – Especial"
+  vencimento  Decimal   @db.Decimal(12, 2)
+  vigenciaIni DateTime  @db.Date
+  vigenciaFim DateTime? @db.Date
+  ativo       Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id])
+  vinculos VinculoFuncional[]
+
+  @@unique([tenantId, simbolo, vigenciaIni])
+  @@index([tenantId])
+  @@map("niveis_comissionados")
+}
+
+// Gratificação de Função — percentuais sobre o vencimento do comissionado
+// GF-1 a GF-N, configurável por tenant
+model GratificacaoFuncao {
+  id          String    @id @default(uuid())
+  tenantId    String
+  simbolo     String    @db.VarChar(10)  // "GF-1", "GF-2" …
+  descricao   String?   @db.VarChar(150)
+  percentual  Decimal   @db.Decimal(6, 2) // ex: 50.00 para 50%
+  vigenciaIni DateTime  @db.Date
+  vigenciaFim DateTime? @db.Date
+  ativo       Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant   Tenant             @relation(fields: [tenantId], references: [id])
+  vinculos VinculoFuncional[]
+
+  @@unique([tenantId, simbolo, vigenciaIni])
+  @@index([tenantId])
+  @@map("gratificacoes_funcao")
 }
 
 // =============================================================
@@ -988,56 +1093,56 @@ model EscalaTrabalho {
   tenantId         String?
   nome             String        @db.VarChar(100)
   turno            TurnoTrabalho
-  horaEntrada      String        @db.VarChar(5)  // "08:00"
-  horaSaida        String        @db.VarChar(5)  // "17:00"
-  intervaloMin     Int           @default(60)     // Minutos de intervalo
+  horaEntrada      String        @db.VarChar(5) // "08:00"
+  horaSaida        String        @db.VarChar(5) // "17:00"
+  intervaloMin     Int           @default(60) // Minutos de intervalo
   horasDiarias     Decimal       @db.Decimal(4, 2)
-  diasSemana       Json          // [1,2,3,4,5] = seg-sex
-  toleranciaAtraso Int           @default(10)    // Minutos de tolerância
+  diasSemana       Json // [1,2,3,4,5] = seg-sex
+  toleranciaAtraso Int           @default(10) // Minutos de tolerância
 
-  registrosPonto   RegistroPonto[]
-  servidores       ServidorEscala[]
+  registrosPonto RegistroPonto[]
+  servidores     ServidorEscala[]
 
   @@map("escalas_trabalho")
 }
 
 model ServidorEscala {
-  id             String         @id @default(uuid())
-  servidorId     String
-  escalaId       String
-  dataInicio     DateTime       @db.Date
-  dataFim        DateTime?      @db.Date
-  ativo          Boolean        @default(true)
+  id         String    @id @default(uuid())
+  servidorId String
+  escalaId   String
+  dataInicio DateTime  @db.Date
+  dataFim    DateTime? @db.Date
+  ativo      Boolean   @default(true)
 
-  escala         EscalaTrabalho @relation(fields: [escalaId], references: [id])
+  escala EscalaTrabalho @relation(fields: [escalaId], references: [id])
 
   @@index([servidorId])
   @@map("servidores_escalas")
 }
 
 model RegistroPonto {
-  id             String              @id @default(uuid())
-  servidorId     String
-  escalaId       String?
-  data           DateTime            @db.Date
-  entrada        DateTime?
-  saidaAlmoco    DateTime?
-  retornoAlmoco  DateTime?
-  saida          DateTime?
-  horasTrabalhadas Decimal?          @db.Decimal(5, 2)
-  horasExtras    Decimal             @db.Decimal(5, 2) @default(0)
-  horasFalta     Decimal             @db.Decimal(5, 2) @default(0)
-  ocorrencia     TipoOcorrenciaPonto?
-  justificativa  String?             @db.VarChar(300)
-  abonado        Boolean             @default(false)
-  abonadoPor     String?             @db.VarChar(150)
-  abonadoEm      DateTime?
-  origem         String              @default("MANUAL") @db.VarChar(20) // MANUAL, REP_P, REP_C
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  id               String               @id @default(uuid())
+  servidorId       String
+  escalaId         String?
+  data             DateTime             @db.Date
+  entrada          DateTime?
+  saidaAlmoco      DateTime?
+  retornoAlmoco    DateTime?
+  saida            DateTime?
+  horasTrabalhadas Decimal?             @db.Decimal(5, 2)
+  horasExtras      Decimal              @default(0) @db.Decimal(5, 2)
+  horasFalta       Decimal              @default(0) @db.Decimal(5, 2)
+  ocorrencia       TipoOcorrenciaPonto?
+  justificativa    String?              @db.VarChar(300)
+  abonado          Boolean              @default(false)
+  abonadoPor       String?              @db.VarChar(150)
+  abonadoEm        DateTime?
+  origem           String               @default("MANUAL") @db.VarChar(20) // MANUAL, REP_P, REP_C
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
-  servidor       Servidor            @relation(fields: [servidorId], references: [id])
-  escala         EscalaTrabalho?     @relation(fields: [escalaId], references: [id])
+  servidor Servidor        @relation(fields: [servidorId], references: [id])
+  escala   EscalaTrabalho? @relation(fields: [escalaId], references: [id])
 
   @@unique([servidorId, data])
   @@index([servidorId])
@@ -1046,16 +1151,16 @@ model RegistroPonto {
 }
 
 model BancoHoras {
-  id          String   @id @default(uuid())
-  servidorId  String
-  data        DateTime @db.Date
-  tipo        String   @db.VarChar(20) // CREDITO, DEBITO
-  horas       Decimal  @db.Decimal(6, 2)
-  saldo       Decimal  @db.Decimal(8, 2) // Saldo acumulado após lançamento
-  descricao   String?  @db.VarChar(200)
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  servidorId String
+  data       DateTime @db.Date
+  tipo       String   @db.VarChar(20) // CREDITO, DEBITO
+  horas      Decimal  @db.Decimal(6, 2)
+  saldo      Decimal  @db.Decimal(8, 2) // Saldo acumulado após lançamento
+  descricao  String?  @db.VarChar(200)
+  createdAt  DateTime @default(now())
 
-  servidor    Servidor @relation(fields: [servidorId], references: [id])
+  servidor Servidor @relation(fields: [servidorId], references: [id])
 
   @@index([servidorId])
   @@map("banco_horas")
@@ -1066,65 +1171,65 @@ model BancoHoras {
 // =============================================================
 
 model PeriodoAquisitivo {
-  id              String    @id @default(uuid())
-  servidorId      String
-  dataInicio      DateTime  @db.Date
-  dataFim         DateTime  @db.Date
-  diasDireito     Int       @default(30)
-  diasGozados     Int       @default(0)
-  diasAbono       Int       @default(0) // Convertidos em pecúnia
-  saldoDias       Int       @default(30)
-  vencido         Boolean   @default(false)
-  createdAt       DateTime  @default(now())
+  id          String   @id @default(uuid())
+  servidorId  String
+  dataInicio  DateTime @db.Date
+  dataFim     DateTime @db.Date
+  diasDireito Int      @default(30)
+  diasGozados Int      @default(0)
+  diasAbono   Int      @default(0) // Convertidos em pecúnia
+  saldoDias   Int      @default(30)
+  vencido     Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-  servidor        Servidor  @relation(fields: [servidorId], references: [id])
-  gozos           Ferias[]
+  servidor Servidor @relation(fields: [servidorId], references: [id])
+  gozos    Ferias[]
 
-  @@index([servidorId])
   @@unique([servidorId, dataInicio])
+  @@index([servidorId])
   @@map("periodos_aquisitivos")
 }
 
 model Ferias {
-  id                  String    @id @default(uuid())
+  id                  String          @id @default(uuid())
   servidorId          String
   periodoAquisitivoId String
-  dataInicio          DateTime  @db.Date
-  dataFim             DateTime  @db.Date
+  dataInicio          DateTime        @db.Date
+  dataFim             DateTime        @db.Date
   diasGozo            Int
-  diasAbono           Int       @default(0)
+  diasAbono           Int             @default(0)
   status              StatusAprovacao @default(PENDENTE)
-  portaria            String?   @db.VarChar(100)
-  observacao          String?   @db.VarChar(300)
-  createdAt           DateTime  @default(now())
+  portaria            String?         @db.VarChar(100)
+  observacao          String?         @db.VarChar(300)
+  createdAt           DateTime        @default(now())
 
-  servidor            Servidor          @relation(fields: [servidorId], references: [id])
-  periodoAquisitivo   PeriodoAquisitivo @relation(fields: [periodoAquisitivoId], references: [id])
-  solicitacao         SolicitacaoAprovacao?
+  servidor          Servidor              @relation(fields: [servidorId], references: [id])
+  periodoAquisitivo PeriodoAquisitivo     @relation(fields: [periodoAquisitivoId], references: [id])
+  solicitacao       SolicitacaoAprovacao?
 
   @@index([servidorId])
   @@map("ferias")
 }
 
 model Licenca {
-  id             String          @id @default(uuid())
-  servidorId     String
-  tipo           TipoLicencaEnum
-  dataInicio     DateTime        @db.Date
-  dataFim        DateTime?       @db.Date
-  diasPrevistos  Int?
-  comOnus        Boolean         @default(true) // Com ou sem remuneração
-  status         StatusAprovacao @default(PENDENTE)
-  portaria       String?         @db.VarChar(100)
-  cid            String?         @db.VarChar(10) // Para licença saúde
-  laudo          String?         @db.VarChar(500) // URL do laudo
-  observacao     String?         @db.VarChar(500)
-  prorrogacoes   Int             @default(0)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id            String          @id @default(uuid())
+  servidorId    String
+  tipo          TipoLicencaEnum
+  dataInicio    DateTime        @db.Date
+  dataFim       DateTime?       @db.Date
+  diasPrevistos Int?
+  comOnus       Boolean         @default(true) // Com ou sem remuneração
+  status        StatusAprovacao @default(PENDENTE)
+  portaria      String?         @db.VarChar(100)
+  cid           String?         @db.VarChar(10) // Para licença saúde
+  laudo         String?         @db.VarChar(500) // URL do laudo
+  observacao    String?         @db.VarChar(500)
+  prorrogacoes  Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
-  servidor       Servidor        @relation(fields: [servidorId], references: [id])
-  solicitacao    SolicitacaoAprovacao?
+  servidor    Servidor              @relation(fields: [servidorId], references: [id])
+  solicitacao SolicitacaoAprovacao?
 
   @@index([servidorId])
   @@map("licencas")
@@ -1135,23 +1240,23 @@ model Licenca {
 // =============================================================
 
 model SolicitacaoAprovacao {
-  id            String          @id @default(uuid())
-  tenantId      String
-  servidorId    String
-  tipo          TipoSolicitacao
-  status        StatusAprovacao @default(PENDENTE)
-  titulo        String          @db.VarChar(200)
-  descricao     String?         @db.Text
-  feriasId      String?         @unique
-  licencaId     String?         @unique
-  dadosExtra    Json?           // Dados específicos do tipo de solicitação
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id         String          @id @default(uuid())
+  tenantId   String
+  servidorId String
+  tipo       TipoSolicitacao
+  status     StatusAprovacao @default(PENDENTE)
+  titulo     String          @db.VarChar(200)
+  descricao  String?         @db.Text
+  feriasId   String?         @unique
+  licencaId  String?         @unique
+  dadosExtra Json? // Dados específicos do tipo de solicitação
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
-  servidor      Servidor        @relation(fields: [servidorId], references: [id])
-  ferias        Ferias?         @relation(fields: [feriasId], references: [id])
-  licenca       Licenca?        @relation(fields: [licencaId], references: [id])
-  etapas        EtapaAprovacao[]
+  servidor Servidor         @relation(fields: [servidorId], references: [id])
+  ferias   Ferias?          @relation(fields: [feriasId], references: [id])
+  licenca  Licenca?         @relation(fields: [licencaId], references: [id])
+  etapas   EtapaAprovacao[]
 
   @@index([tenantId, status])
   @@index([servidorId])
@@ -1159,17 +1264,17 @@ model SolicitacaoAprovacao {
 }
 
 model EtapaAprovacao {
-  id              String          @id @default(uuid())
-  solicitacaoId   String
-  ordem           Int
-  aprovadorId     String          // Usuario responsável pela etapa
-  status          StatusAprovacao @default(PENDENTE)
-  parecer         String?         @db.Text
-  dataResposta    DateTime?
-  createdAt       DateTime        @default(now())
+  id            String          @id @default(uuid())
+  solicitacaoId String
+  ordem         Int
+  aprovadorId   String // Usuario responsável pela etapa
+  status        StatusAprovacao @default(PENDENTE)
+  parecer       String?         @db.Text
+  dataResposta  DateTime?
+  createdAt     DateTime        @default(now())
 
-  solicitacao     SolicitacaoAprovacao @relation(fields: [solicitacaoId], references: [id], onDelete: Cascade)
-  aprovador       Usuario              @relation(fields: [aprovadorId], references: [id])
+  solicitacao SolicitacaoAprovacao @relation(fields: [solicitacaoId], references: [id], onDelete: Cascade)
+  aprovador   Usuario              @relation(fields: [aprovadorId], references: [id])
 
   @@index([solicitacaoId])
   @@index([aprovadorId, status])
@@ -1181,22 +1286,22 @@ model EtapaAprovacao {
 // =============================================================
 
 model ConcursoPublico {
-  id               String         @id @default(uuid())
-  tenantId         String
-  numero           String         @db.VarChar(30)  // Ex: 001/2025
-  descricao        String         @db.VarChar(300)
-  status           StatusConcurso @default(PLANEJAMENTO)
-  dataAbertura     DateTime       @db.Date
-  dataValidade     DateTime       @db.Date
-  dataHomologacao  DateTime?      @db.Date
-  editalUrl        String?        @db.VarChar(500)
-  banca            String?        @db.VarChar(150)
-  observacao       String?        @db.Text
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id              String         @id @default(uuid())
+  tenantId        String
+  numero          String         @db.VarChar(30) // Ex: 001/2025
+  descricao       String         @db.VarChar(300)
+  status          StatusConcurso @default(PLANEJAMENTO)
+  dataAbertura    DateTime       @db.Date
+  dataValidade    DateTime       @db.Date
+  dataHomologacao DateTime?      @db.Date
+  editalUrl       String?        @db.VarChar(500)
+  banca           String?        @db.VarChar(150)
+  observacao      String?        @db.Text
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  tenant           Tenant         @relation(fields: [tenantId], references: [id])
-  candidatos       Candidato[]
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  candidatos Candidato[]
 
   @@unique([tenantId, numero])
   @@index([tenantId])
@@ -1219,9 +1324,9 @@ model Candidato {
   servidorId       String?   @unique // Preenchido após posse
   observacao       String?   @db.VarChar(300)
 
-  concurso         ConcursoPublico @relation(fields: [concursoId], references: [id])
-  cargo            Cargo           @relation(fields: [cargoId], references: [id])
-  servidor         Servidor?       @relation(fields: [servidorId], references: [id])
+  concurso ConcursoPublico @relation(fields: [concursoId], references: [id])
+  cargo    Cargo           @relation(fields: [cargoId], references: [id])
+  servidor Servidor?       @relation(fields: [servidorId], references: [id])
 
   @@unique([concursoId, cargoId, classificacao])
   @@index([concursoId])
@@ -1229,29 +1334,29 @@ model Candidato {
 }
 
 model EstagioProbatorio {
-  id              String    @id @default(uuid())
-  servidorId      String    @unique
-  dataInicio      DateTime  @db.Date
-  dataFim         DateTime  @db.Date  // Geralmente 3 anos
-  status          String    @db.VarChar(30) // EM_CURSO, APROVADO, REPROVADO
-  avaliacoes      AvaliacaoEstagio[]
+  id         String             @id @default(uuid())
+  servidorId String             @unique
+  dataInicio DateTime           @db.Date
+  dataFim    DateTime           @db.Date // Geralmente 3 anos
+  status     String             @db.VarChar(30) // EM_CURSO, APROVADO, REPROVADO
+  avaliacoes AvaliacaoEstagio[]
 
-  servidor        Servidor  @relation(fields: [servidorId], references: [id])
+  servidor Servidor @relation(fields: [servidorId], references: [id])
 
   @@map("estagios_probatorios")
 }
 
 model AvaliacaoEstagio {
-  id                 String    @id @default(uuid())
-  estagioProbId      String
-  periodo            Int       // 1=3meses, 2=6meses, 3=12meses, 4=24meses, 5=36meses
-  dataAvaliacao      DateTime  @db.Date
-  notaGeral          Decimal?  @db.Decimal(4, 2)
-  resultado          String    @db.VarChar(20) // APROVADO, REPROVADO, PENDENTE
-  avaliadorNome      String?   @db.VarChar(150)
-  observacao         String?   @db.Text
+  id            String   @id @default(uuid())
+  estagioProbId String
+  periodo       Int // 1=3meses, 2=6meses, 3=12meses, 4=24meses, 5=36meses
+  dataAvaliacao DateTime @db.Date
+  notaGeral     Decimal? @db.Decimal(4, 2)
+  resultado     String   @db.VarChar(20) // APROVADO, REPROVADO, PENDENTE
+  avaliadorNome String?  @db.VarChar(150)
+  observacao    String?  @db.Text
 
-  estagioProbatorio  EstagioProbatorio @relation(fields: [estagioProbId], references: [id], onDelete: Cascade)
+  estagioProbatorio EstagioProbatorio @relation(fields: [estagioProbId], references: [id], onDelete: Cascade)
 
   @@map("avaliacoes_estagio")
 }
@@ -1261,43 +1366,43 @@ model AvaliacaoEstagio {
 // =============================================================
 
 model Aposentadoria {
-  id                 String             @id @default(uuid())
-  servidorId         String             @unique
-  tipo               TipoAposentadoria
-  status             StatusAposentadoria @default(REQUERIDA)
-  dataRequerimento   DateTime           @db.Date
-  dataConcessao      DateTime?          @db.Date
-  dataInicioBeneficio DateTime?         @db.Date
-  tempoContribuicao  Int?               // Meses
-  idadeNaConcessao   Int?               // Anos
-  mediaRemuneracao   Decimal?           @db.Decimal(12, 2)
-  valorBeneficio     Decimal?           @db.Decimal(12, 2)
-  portaria           String?            @db.VarChar(100)
-  fundamentoLegal    String?            @db.VarChar(300)
-  observacao         String?            @db.Text
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id                  String              @id @default(uuid())
+  servidorId          String              @unique
+  tipo                TipoAposentadoria
+  status              StatusAposentadoria @default(REQUERIDA)
+  dataRequerimento    DateTime            @db.Date
+  dataConcessao       DateTime?           @db.Date
+  dataInicioBeneficio DateTime?           @db.Date
+  tempoContribuicao   Int? // Meses
+  idadeNaConcessao    Int? // Anos
+  mediaRemuneracao    Decimal?            @db.Decimal(12, 2)
+  valorBeneficio      Decimal?            @db.Decimal(12, 2)
+  portaria            String?             @db.VarChar(100)
+  fundamentoLegal     String?             @db.VarChar(300)
+  observacao          String?             @db.Text
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
 
-  servidor           Servidor           @relation(fields: [servidorId], references: [id])
+  servidor Servidor @relation(fields: [servidorId], references: [id])
 
   @@map("aposentadorias")
 }
 
 model Pensao {
-  id                 String    @id @default(uuid())
-  servidorOrigemId   String    @unique // Servidor falecido
-  dependenteId       String
-  dataInicio         DateTime  @db.Date
-  dataFim            DateTime? @db.Date
-  motivoFim          String?   @db.VarChar(200)
-  valorBeneficio     Decimal   @db.Decimal(12, 2)
-  percentual         Decimal   @db.Decimal(5, 2) @default(100.00)
-  portaria           String?   @db.VarChar(100)
-  ativa              Boolean   @default(true)
-  createdAt          DateTime  @default(now())
+  id               String    @id @default(uuid())
+  servidorOrigemId String    @unique // Servidor falecido
+  dependenteId     String
+  dataInicio       DateTime  @db.Date
+  dataFim          DateTime? @db.Date
+  motivoFim        String?   @db.VarChar(200)
+  valorBeneficio   Decimal   @db.Decimal(12, 2)
+  percentual       Decimal   @default(100.00) @db.Decimal(5, 2)
+  portaria         String?   @db.VarChar(100)
+  ativa            Boolean   @default(true)
+  createdAt        DateTime  @default(now())
 
-  servidorOrigem     Servidor  @relation("ServidorOrigem", fields: [servidorOrigemId], references: [id])
-  dependente         Dependente @relation(fields: [dependenteId], references: [id])
+  servidorOrigem Servidor   @relation("ServidorOrigem", fields: [servidorOrigemId], references: [id])
+  dependente     Dependente @relation(fields: [dependenteId], references: [id])
 
   @@map("pensoes")
 }
@@ -1307,30 +1412,30 @@ model Pensao {
 // =============================================================
 
 model ProcessoDisciplinar {
-  id              String                    @id @default(uuid())
-  tenantId        String
-  servidorId      String
-  numero          String                    @db.VarChar(30)   // Ex: PAD-001/2025
-  tipo            TipoProcessoDisciplinar
-  status          StatusProcessoDisciplinar @default(INSTAURADO)
-  dataInstauracao DateTime                  @db.Date
-  dataEncerramento DateTime?                @db.Date
-  portariaInstaur String?                   @db.VarChar(100)
-  presidente      String?                   @db.VarChar(150) // Nome do presidente da comissão
-  descricaoFatos  String                    @db.Text
-  penalidade      TipoPenalidade?
-  valorMulta      Decimal?                  @db.Decimal(10, 2)
-  diasSuspensao   Int?
-  portariaJulg    String?                   @db.VarChar(100)
-  recurso         Boolean                   @default(false)
-  dataRecurso     DateTime?                 @db.Date
-  resultadoRecurso String?                  @db.VarChar(300)
-  observacao      String?                   @db.Text
-  createdAt       DateTime                  @default(now())
-  updatedAt       DateTime                  @updatedAt
+  id               String                    @id @default(uuid())
+  tenantId         String
+  servidorId       String
+  numero           String                    @db.VarChar(30) // Ex: PAD-001/2025
+  tipo             TipoProcessoDisciplinar
+  status           StatusProcessoDisciplinar @default(INSTAURADO)
+  dataInstauracao  DateTime                  @db.Date
+  dataEncerramento DateTime?                 @db.Date
+  portariaInstaur  String?                   @db.VarChar(100)
+  presidente       String?                   @db.VarChar(150) // Nome do presidente da comissão
+  descricaoFatos   String                    @db.Text
+  penalidade       TipoPenalidade?
+  valorMulta       Decimal?                  @db.Decimal(10, 2)
+  diasSuspensao    Int?
+  portariaJulg     String?                   @db.VarChar(100)
+  recurso          Boolean                   @default(false)
+  dataRecurso      DateTime?                 @db.Date
+  resultadoRecurso String?                   @db.VarChar(300)
+  observacao       String?                   @db.Text
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
 
-  servidor        Servidor                  @relation(fields: [servidorId], references: [id])
-  documentos      DocProcessoDisciplinar[]
+  servidor   Servidor                 @relation(fields: [servidorId], references: [id])
+  documentos DocProcessoDisciplinar[]
 
   @@unique([tenantId, numero])
   @@index([tenantId])
@@ -1339,15 +1444,15 @@ model ProcessoDisciplinar {
 }
 
 model DocProcessoDisciplinar {
-  id          String               @id @default(uuid())
-  processoId  String
-  tipo        String               @db.VarChar(100)
-  descricao   String               @db.VarChar(300)
-  urlArquivo  String               @db.VarChar(500)
-  dataDoc     DateTime?            @db.Date
-  createdAt   DateTime             @default(now())
+  id         String    @id @default(uuid())
+  processoId String
+  tipo       String    @db.VarChar(100)
+  descricao  String    @db.VarChar(300)
+  urlArquivo String    @db.VarChar(500)
+  dataDoc    DateTime? @db.Date
+  createdAt  DateTime  @default(now())
 
-  processo    ProcessoDisciplinar  @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  processo ProcessoDisciplinar @relation(fields: [processoId], references: [id], onDelete: Cascade)
 
   @@map("docs_processos_disciplinares")
 }
@@ -1357,42 +1462,42 @@ model DocProcessoDisciplinar {
 // =============================================================
 
 model DocumentoAssinatura {
-  id              String                  @id @default(uuid())
-  tenantId        String
-  titulo          String                  @db.VarChar(200)
-  tipo            TipoDocumentoAssinatura
-  urlDocumento    String                  @db.VarChar(500)
-  hashDocumento   String                  @db.VarChar(128) // SHA-256 do arquivo
-  expiracaoEm     DateTime?
-  criadoPor       String                  @db.VarChar(150)
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
+  id            String                  @id @default(uuid())
+  tenantId      String
+  titulo        String                  @db.VarChar(200)
+  tipo          TipoDocumentoAssinatura
+  urlDocumento  String                  @db.VarChar(500)
+  hashDocumento String                  @db.VarChar(128) // SHA-256 do arquivo
+  expiracaoEm   DateTime?
+  criadoPor     String                  @db.VarChar(150)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
 
-  signatarios     AssinaturaDigital[]
-  servidoresDoc   Servidor[]              @relation("DocumentoServidor")
+  signatarios   AssinaturaDigital[]
+  servidoresDoc Servidor[]          @relation("DocumentoServidor")
 
   @@index([tenantId])
   @@map("documentos_assinatura")
 }
 
 model AssinaturaDigital {
-  id            String             @id @default(uuid())
-  documentoId   String
-  usuarioId     String
-  servidorId    String?
-  status        StatusAssinatura   @default(PENDENTE)
-  ordem         Int                @default(1)
-  assinadoEm   DateTime?
-  ip            String?            @db.VarChar(45)
-  hashAssinatura String?           @db.VarChar(500)
-  certificado   String?            @db.Text // Dados do certificado digital se ICP-Brasil
-  recusadoEm   DateTime?
-  motivoRecusa  String?            @db.VarChar(300)
-  createdAt     DateTime           @default(now())
+  id             String           @id @default(uuid())
+  documentoId    String
+  usuarioId      String
+  servidorId     String?
+  status         StatusAssinatura @default(PENDENTE)
+  ordem          Int              @default(1)
+  assinadoEm     DateTime?
+  ip             String?          @db.VarChar(45)
+  hashAssinatura String?          @db.VarChar(500)
+  certificado    String?          @db.Text // Dados do certificado digital se ICP-Brasil
+  recusadoEm     DateTime?
+  motivoRecusa   String?          @db.VarChar(300)
+  createdAt      DateTime         @default(now())
 
-  documento     DocumentoAssinatura @relation(fields: [documentoId], references: [id], onDelete: Cascade)
-  usuario       Usuario             @relation(fields: [usuarioId], references: [id])
-  servidor      Servidor?           @relation(fields: [servidorId], references: [id])
+  documento DocumentoAssinatura @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  usuario   Usuario             @relation(fields: [usuarioId], references: [id])
+  servidor  Servidor?           @relation(fields: [servidorId], references: [id])
 
   @@unique([documentoId, usuarioId])
   @@index([documentoId])
@@ -1405,22 +1510,22 @@ model AssinaturaDigital {
 // =============================================================
 
 model ConfiguracaoTransparencia {
-  id                  String   @id @default(uuid())
-  tenantId            String   @unique
-  ativo               Boolean  @default(true)
-  nomePortal          String   @db.VarChar(200)
-  urlPortal           String?  @db.VarChar(500)
-  atualizacaoAutomat  Boolean  @default(true) // Atualiza após fechar folha
-  exibirNome          Boolean  @default(true)
-  exibirCargo         Boolean  @default(true)
-  exibirLotacao       Boolean  @default(true)
-  exibirVinculos      Boolean  @default(true)
-  exibirRemuneracao   Boolean  @default(true)
-  exibirDescontos     Boolean  @default(true)
-  exibirLiquido       Boolean  @default(true)
-  updatedAt           DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  tenantId           String   @unique
+  ativo              Boolean  @default(true)
+  nomePortal         String   @db.VarChar(200)
+  urlPortal          String?  @db.VarChar(500)
+  atualizacaoAutomat Boolean  @default(true) // Atualiza após fechar folha
+  exibirNome         Boolean  @default(true)
+  exibirCargo        Boolean  @default(true)
+  exibirLotacao      Boolean  @default(true)
+  exibirVinculos     Boolean  @default(true)
+  exibirRemuneracao  Boolean  @default(true)
+  exibirDescontos    Boolean  @default(true)
+  exibirLiquido      Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
 
-  tenant              Tenant   @relation(fields: [tenantId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@map("configuracoes_transparencia")
 }
@@ -1430,12 +1535,12 @@ model PublicacaoTransparencia {
   tenantId         String
   folhaPagamentoId String
   competencia      String   @db.VarChar(7) // YYYY-MM
-  dados            Json     // Array de registros para o portal
+  dados            Json // Array de registros para o portal
   geradaEm         DateTime @default(now())
   ativa            Boolean  @default(true)
 
-  tenant           Tenant         @relation(fields: [tenantId], references: [id])
-  folha            FolhaPagamento @relation(fields: [folhaPagamentoId], references: [id])
+  tenant Tenant         @relation(fields: [tenantId], references: [id])
+  folha  FolhaPagamento @relation(fields: [folhaPagamentoId], references: [id])
 
   @@unique([tenantId, competencia])
   @@index([tenantId])

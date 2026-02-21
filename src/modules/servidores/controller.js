@@ -16,7 +16,7 @@ const buscarPorId = async (req, res) => {
 };
 
 const criar = async (req, res) => {
-  const data = await getService(req).criar(req.body, req.user.id);
+  const data = await getService(req).criar(req.body, req.user.tenantId, req.user.id);
   created(res, data);
 };
 

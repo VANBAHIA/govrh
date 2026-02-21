@@ -25,6 +25,7 @@ const disciplinarRoutes   = require('./modules/disciplinar/disciplinar.routes');
 const assinaturaRoutes    = require('./modules/assinatura/assinatura.routes');
 const transparenciaRoutes = require('./modules/transparencia/transparencia.routes');
 const notificacoesRoutes  = require('./modules/notificacoes/notificacoes.routes');
+const dashboardRoutes     = require('./modules/dashboard/dashboard.routes');
 
 const app = express();
 
@@ -72,6 +73,7 @@ app.use(`${api}/aposentadoria`, aposentadoriaRoutes);
 app.use(`${api}/disciplinar`,   disciplinarRoutes);
 app.use(`${api}/assinatura`,    assinaturaRoutes);
 app.use(`${api}/notificacoes`,  notificacoesRoutes);
+app.use(`${api}/dashboard`,     dashboardRoutes);
 
 // Rota pública de transparência (sem JWT)
 app.use(`${api}/public`,        transparenciaRoutes);

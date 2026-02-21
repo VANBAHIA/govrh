@@ -10,15 +10,16 @@ class ServidorController {
       .forEach(m => (this[m] = this[m].bind(this)));
   }
 
+  // ── Servidores ───────────────────────────────────────────────
   async listar(req, res, next) {
     try {
       const { skip, take, page, limit } = parsePagination(req.query);
       const filtros = {
-        situacao: req.query.situacao,
-        regime: req.query.regime,
+        situacao:  req.query.situacao,
+        regime:    req.query.regime,
         lotacaoId: req.query.lotacaoId,
-        cargoId: req.query.cargoId,
-        search: req.query.q,
+        cargoId:   req.query.cargoId,
+        search:    req.query.q,
       };
       const { servidores, total } = await this.service.listar(req.tenantId, filtros, skip, take);
       paginate(res, servidores, total, page, limit);
@@ -53,13 +54,114 @@ class ServidorController {
     } catch (err) { next(err); }
   }
 
-  async historico(req, res, next) {
+  async exportar(req, res, next) {
     try {
-      const historico = await this.service.historico(req.tenantId, req.params.id);
-      ok(res, historico);
+      const buffer = await this.service.exportarXlsx(req.tenantId, req.query);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=servidores.xlsx');
+      res.send(buffer);
     } catch (err) { next(err); }
   }
 
+  async excluir(req, res, next) {
+    try {
+      await this.service.excluir(req.tenantId, req.params.id);
+      noContent(res);
+    } catch (err) { next(err); }
+  }
+
+  // ── Vínculos ─────────────────────────────────────────────────
+  async historico(req, res, next) {
+    try {
+      const data = await this.service.historico(req.tenantId, req.params.id);
+      ok(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async criarVinculo(req, res, next) {
+    try {
+      const data = await this.service.criarVinculo(req.tenantId, req.params.id, req.body);
+      created(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async atualizarVinculo(req, res, next) {
+    try {
+      const data = await this.service.atualizarVinculo(req.tenantId, req.params.id, req.body);
+      ok(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async corrigirVinculo(req, res, next) {
+    try {
+      const data = await this.service.corrigirVinculo(req.tenantId, req.params.id, req.params.vinculoId, req.body);
+      ok(res, data);
+    } catch (err) { next(err); }
+  }
+
+  // ── Contatos ─────────────────────────────────────────────────
+  async listarContatos(req, res, next) {
+    try {
+      const data = await this.service.listarContatos(req.tenantId, req.params.id);
+      ok(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async criarContato(req, res, next) {
+    try {
+      const data = await this.service.criarContato(req.tenantId, req.params.id, req.body);
+      created(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async atualizarContato(req, res, next) {
+    try {
+      const data = await this.service.atualizarContato(
+        req.tenantId, req.params.id, req.params.contatoId, req.body
+      );
+      ok(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async removerContato(req, res, next) {
+    try {
+      await this.service.removerContato(req.tenantId, req.params.id, req.params.contatoId);
+      noContent(res);
+    } catch (err) { next(err); }
+  }
+
+  // ── Endereços ────────────────────────────────────────────────
+  async listarEnderecos(req, res, next) {
+    try {
+      const data = await this.service.listarEnderecos(req.tenantId, req.params.id);
+      ok(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async criarEndereco(req, res, next) {
+    try {
+      const data = await this.service.criarEndereco(req.tenantId, req.params.id, req.body);
+      created(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async atualizarEndereco(req, res, next) {
+    try {
+      const data = await this.service.atualizarEndereco(
+        req.tenantId, req.params.id, req.params.enderecoId, req.body
+      );
+      ok(res, data);
+    } catch (err) { next(err); }
+  }
+
+  async removerEndereco(req, res, next) {
+    try {
+      await this.service.removerEndereco(req.tenantId, req.params.id, req.params.enderecoId);
+      noContent(res);
+    } catch (err) { next(err); }
+  }
+
+  // ── Sub-recursos ─────────────────────────────────────────────
   async documentos(req, res, next) {
     try {
       const docs = await this.service.documentos(req.tenantId, req.params.id);
@@ -85,15 +187,6 @@ class ServidorController {
     try {
       const data = await this.service.extrato(req.tenantId, req.params.id);
       ok(res, data);
-    } catch (err) { next(err); }
-  }
-
-  async exportar(req, res, next) {
-    try {
-      const buffer = await this.service.exportarXlsx(req.tenantId, req.query);
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', 'attachment; filename=servidores.xlsx');
-      res.send(buffer);
     } catch (err) { next(err); }
   }
 }
