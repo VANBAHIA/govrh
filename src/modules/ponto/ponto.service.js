@@ -37,9 +37,20 @@ class PontoService {
 
   async espelho(tenantId, servidorId, mes) {
     // mes = YYYY-MM
+    // aceitarmos tanto o UUID quanto a matrícula para facilitar consultas
     const srv = await prisma.servidor.findFirst({
-      where: { id: servidorId, tenantId },
-      select: { id: true, matricula: true, nome: true, cargo: { select: { nome: true } }, lotacao: { select: { nome: true } } },
+      where: {
+        tenantId,
+        OR: [
+          { id: servidorId },
+          { matricula: servidorId },
+        ],
+      },
+      select: { 
+        id: true, 
+        matricula: true, 
+        nome: true,
+      },
     });
     if (!srv) throw Errors.NOT_FOUND('Servidor');
 
@@ -62,12 +73,52 @@ class PontoService {
       return acc;
     }, { horasTrabalhadas: 0, horasExtras: 0, horasFalta: 0, faltas: 0, faltasJustif: 0 });
 
-    return { servidor: srv, mes, registros, totais };
+    // Transformar registros em batidas (formato esperado pelo frontend)
+    const batidas = registros.map(r => ({
+      data: r.data.toISOString(),
+      entrada: r.entrada ? r.entrada.toISOString().split('T')[1].substring(0, 5) : undefined,
+      saidaAlmoco: r.saidaAlmoco ? r.saidaAlmoco.toISOString().split('T')[1].substring(0, 5) : undefined,
+      retornoAlmoco: r.retornoAlmoco ? r.retornoAlmoco.toISOString().split('T')[1].substring(0, 5) : undefined,
+      saida: r.saida ? r.saida.toISOString().split('T')[1].substring(0, 5) : undefined,
+      horasTrabalhadas: r.horasTrabalhadas ? Number(r.horasTrabalhadas) : undefined,
+      horasDevidas: 0,
+      saldo: r.horasExtras ? Number(r.horasExtras) : 0,
+      ocorrencias: r.ocorrencia ? [r.ocorrencia.replace('FALTA_INJUSTIFICADA', 'FALTA').replace('_', ' ')] : [],
+      status: 'APROVADO',
+      observacao: r.justificativa,
+    }));
+
+    // Calcular saldo do banco de horas (simplificado)
+    const saldoBanco = totais.horasExtras - totais.horasFalta;
+
+    return {
+      servidorId: srv.id,
+      nome: srv.nome,
+      matricula: srv.matricula,
+      competencia: mes,
+      diasUteis: 0,
+      diasTrabalhados: registros.filter(r => !r.ocorrencia || !r.ocorrencia.includes('FALTA')).length,
+      diasFalta: totais.faltas + totais.faltasJustif,
+      horasPrevistas: 0,
+      horasTrabalhadas: totais.horasTrabalhadas,
+      horasExtra: totais.horasExtras,
+      horasDevidas: totais.horasFalta,
+      saldoBanco,
+      batidas,
+    };
   }
 
   async lancar(tenantId, dados) {
-    // Valida servidor
-    const srv = await prisma.servidor.findFirst({ where: { id: dados.servidorId, tenantId } });
+    // Valida servidor (aceitamos tanto o UUID quanto a matrícula para facilitar uso em terminais)
+    const srv = await prisma.servidor.findFirst({
+      where: {
+        tenantId,
+        OR: [
+          { id: dados.servidorId },
+          { matricula: dados.servidorId },
+        ],
+      },
+    });
     if (!srv) throw Errors.NOT_FOUND('Servidor');
 
     const data = new Date(dados.data);
@@ -109,6 +160,58 @@ class PontoService {
       },
       update: { entrada, saida, horasTrabalhadas, horasExtras, horasFalta, ocorrencia: dados.ocorrencia || null },
     });
+  }
+
+  // registra uma batida simples conforme horário atual do relógio e do registro existente
+  async bater(tenantId, { servidorId, data, hora }) {
+    const srv = await prisma.servidor.findFirst({
+      where: {
+        tenantId,
+        OR: [
+          { id: servidorId },
+          { matricula: servidorId },
+        ],
+      },
+    });
+    if (!srv) throw Errors.NOT_FOUND('Servidor');
+
+    const dt = new Date(data);
+    if (isNaN(dt)) throw Errors.APP_ERROR('Data inválida');
+    const ts = new Date(`${data}T${hora}`);
+    if (isNaN(ts)) throw Errors.APP_ERROR('Hora inválida');
+
+    // busca registro já existente para a data, se houver
+    let registro = await prisma.registroPonto.findFirst({
+      where: { servidorId, data: dt },
+    });
+
+    const campos = {};
+    let tipoInserido = null;
+    if (!registro || !registro.entrada) {
+      campos.entrada = ts;
+      tipoInserido = 'entrada';
+    } else if (!registro.saida) {
+      campos.saida = ts;
+      campos.entrada = registro.entrada;
+      tipoInserido = 'saida';
+    } else if (!registro.saidaAlmoco) {
+      campos.saidaAlmoco = ts;
+      campos.entrada = registro.entrada;
+      campos.saida = registro.saida;
+      tipoInserido = 'saidaAlmoco';
+    } else if (!registro.retornoAlmoco) {
+      campos.retornoAlmoco = ts;
+      campos.entrada = registro.entrada;
+      campos.saida = registro.saida;
+      campos.saidaAlmoco = registro.saidaAlmoco;
+      tipoInserido = 'retornoAlmoco';
+    } else {
+      // nada a fazer, retorna o registro existente sem alterações
+      return { registro, tipo: null };
+    }
+
+    const resultado = await this.lancar(tenantId, { servidorId, data, ...campos });
+    return { registro: resultado, tipo: tipoInserido };
   }
 
   async importar(tenantId, { servidorId, registros }) {
@@ -210,7 +313,7 @@ class PontoService {
         ocorrencia: null,
       },
       include: {
-        servidor: { select: { matricula: true, nome: true, lotacao: { select: { nome: true } } } },
+        servidor: { select: { matricula: true, nome: true } },
       },
       orderBy: { data: 'desc' },
     });

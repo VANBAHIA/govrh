@@ -28,11 +28,18 @@ router.delete('/consignados/:id',             authorize('folha', 'delete'), ctrl
 router.get('/',                               authorize('folha', 'read'),   ctrl.listarFolhas);
 router.post('/processar',                     authorize('folha', 'create'), auditLog('folha', 'processar'), ctrl.processar);
 
+// Excluir folha inteira
+router.delete('/:competencia/:tipo',          authorize('folha', 'delete'), auditLog('folha', 'delete'), ctrl.excluir);
+
 // Itens por ID da folha — ANTES de /:competencia/:tipo (ordem crítica no Express)
 router.get('/id/:folhaId/itens',              authorize('folha', 'read'),   ctrl.listarItensPorId);
 
 // Holerite individual
 router.get('/holerite/:servidorId/:competencia', authorize('folha', 'read'), ctrl.holerite);
+
+// Reprocessar servidor específico dentro da folha
+router.post('/:competencia/:tipo/servidor/:servidorId/reprocessar',
+         authorize('folha', 'update'), auditLog('folha', 'processar'), ctrl.reprocessarServidor);
 
 // Folha por competencia+tipo
 router.get('/:competencia/:tipo',             authorize('folha', 'read'),   ctrl.buscarFolha);
@@ -41,5 +48,8 @@ router.get('/:competencia/:tipo/analitico',   authorize('folha', 'read'),   ctrl
 router.get('/:competencia/:tipo/sintetico',   authorize('folha', 'read'),   ctrl.relatorioSintetico);
 router.post('/:competencia/:tipo/fechar',     authorize('folha', 'update'), auditLog('folha', 'fechar'), ctrl.fechar);
 router.post('/:competencia/:tipo/reabrir',    authorize('folha', 'update'), auditLog('folha', 'reabrir'), ctrl.reabrir);
+
+// excluir folha (não permitido se fechada)
+router.delete('/:competencia/:tipo',               authorize('folha', 'delete'), auditLog('folha', 'delete'), ctrl.excluir);
 
 module.exports = router;

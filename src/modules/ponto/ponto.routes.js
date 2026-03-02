@@ -16,6 +16,8 @@ router.post('/escalas/:id/vincular',         authorize('ponto', 'update'), ctrl.
 // Registro de ponto
 router.get('/espelho/:servidorId/:mes',      authorize('ponto', 'read'),   ctrl.espelho);
 router.post('/lancamento',                   authorize('ponto', 'create'), auditLog('ponto', 'lancamento'), ctrl.lancar);
+// endpoint simplificado para terminais de ponto
+router.post('/bater',                        authorize('ponto', 'create'), auditLog('ponto', 'lancamento'), ctrl.bater);
 router.post('/importar',                     authorize('ponto', 'create'), ctrl.importar);
 router.put('/:id/abono',                     authorize('ponto', 'update'), auditLog('ponto', 'abono'), ctrl.abonar);
 router.put('/:id/ocorrencia',               authorize('ponto', 'update'), ctrl.registrarOcorrencia);

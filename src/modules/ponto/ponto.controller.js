@@ -27,6 +27,13 @@ class PontoController {
   async lancar(req, res, next) {
     try { created(res, await this.service.lancar(req.tenantId, req.body)); } catch (e) { next(e); }
   }
+  async bater(req, res, next) {
+    try {
+      const { servidorId, data, hora } = req.body;
+      const batida = await this.service.bater(req.tenantId, { servidorId, data, hora });
+      created(res, batida);
+    } catch (e) { next(e); }
+  }
   async importar(req, res, next) {
     try { ok(res, await this.service.importar(req.tenantId, req.body)); } catch (e) { next(e); }
   }

@@ -68,6 +68,23 @@ class FolhaController {
     try { ok(res, await this.service.buscarFolha(req.tenantId, req.params.competencia, req.params.tipo)); }
     catch (err) { next(err); }
   }
+
+  async excluir(req, res, next) {
+    try { await this.service.excluir(req.tenantId, req.params.competencia, req.params.tipo); noContent(res); }
+    catch (err) { next(err); }
+  }
+
+  async reprocessarServidor(req, res, next) {
+    try {
+      ok(res, await this.service.reprocessarServidor(
+        req.tenantId,
+        req.params.competencia,
+        req.params.tipo,
+        req.params.servidorId
+      ));
+    } catch (err) { next(err); }
+  }
+
   async listarItens(req, res, next) {
     try {
       const { skip, take, page, limit } = parsePagination(req.query);
@@ -88,6 +105,10 @@ class FolhaController {
   }
   async reabrir(req, res, next) {
     try { ok(res, await this.service.reabrir(req.tenantId, req.params.competencia, req.params.tipo)); }
+    catch (err) { next(err); }
+  }
+  async excluir(req, res, next) {
+    try { ok(res, await this.service.excluir(req.tenantId, req.params.competencia, req.params.tipo)); }
     catch (err) { next(err); }
   }
   async holerite(req, res, next) {

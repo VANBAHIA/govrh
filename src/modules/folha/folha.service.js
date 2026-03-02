@@ -391,6 +391,81 @@ class FolhaService {
     return folha;
   }
 
+  async excluir(tenantId, competencia, tipo) {
+    const folha = await prisma.folhaPagamento.findFirst({ where: { tenantId, competencia, tipo } });
+    if (!folha) throw Errors.NOT_FOUND('Folha de Pagamento');
+
+    await prisma.$transaction([
+      prisma.itemFolhaVerba.deleteMany({ where: { itemFolha: { folhaPagamentoId: folha.id } } }),
+      prisma.itemFolha.deleteMany({ where: { folhaPagamentoId: folha.id } }),
+      prisma.folhaPagamento.delete({ where: { id: folha.id } }),
+    ]);
+
+    return { message: 'Folha excluída' };
+  }
+
+  async reprocessarServidor(tenantId, competencia, tipo, servidorId) {
+    const folha = await prisma.folhaPagamento.findFirst({ where: { tenantId, competencia, tipo } });
+    if (!folha) throw Errors.NOT_FOUND('Folha de Pagamento');
+    if (folha.status === 'FECHADA') throw Errors.FOLHA_FECHADA();
+
+    const srv = await prisma.servidor.findFirst({
+      where: {
+        tenantId,
+        id: servidorId,
+        vinculos: { some: { situacaoFuncional: 'ATIVO', atual: true } },
+      },
+      include: {
+        vinculos: {
+          where: { situacaoFuncional: 'ATIVO', atual: true },
+          take: 1,
+          include: {
+            nivelSalarial: true,
+            nivelComissionado: true,
+            gratificacaoFuncao: true,
+          },
+        },
+        consignados: { where: { ativo: true } },
+        dependentes: { where: { ativo: true, irrf: true } },
+      },
+    });
+    if (!srv) throw Errors.NOT_FOUND('Servidor');
+
+    const config = await this.getConfig(tenantId);
+    const verbasSistema = await prisma.verba.findMany({ where: { tenantId, isSistema: true }, select: { id: true, codigoSistema: true } });
+    const verbaMap = Object.fromEntries(verbasSistema.map(v => [v.codigoSistema, v.id]));
+
+    const resultado = await this._calcularServidor(srv, config, tipo, verbaMap);
+
+    const item = await prisma.itemFolha.upsert({
+      where: { folhaPagamentoId_servidorId: { folhaPagamentoId: folha.id, servidorId: srv.id } },
+      create: { folhaPagamentoId: folha.id, servidorId: srv.id, ...resultado.totais },
+      update: resultado.totais,
+    });
+
+    await prisma.itemFolhaVerba.deleteMany({ where: { itemFolhaId: item.id } });
+    if (resultado.verbas.length) {
+      await prisma.itemFolhaVerba.createMany({ data: resultado.verbas.map(v => ({ itemFolhaId: item.id, ...v })) });
+    }
+
+    const totals = await prisma.itemFolha.aggregate({
+      where: { folhaPagamentoId: folha.id },
+      _sum: { totalProventos: true, totalDescontos: true, totalLiquido: true },
+      _count: { servidorId: true },
+    });
+    await prisma.folhaPagamento.update({
+      where: { id: folha.id },
+      data: {
+        totalProventos: totals._sum.totalProventos || 0,
+        totalDescontos: totals._sum.totalDescontos || 0,
+        totalLiquido: totals._sum.totalLiquido || 0,
+        totalServid: totals._count.servidorId || 0,
+      },
+    });
+
+    return { servidorId: srv.id, folhaId: folha.id };
+  }
+
   async listarItens(tenantId, competencia, tipo, query = {}, skip = 0, take = 20) {
     const folha = await this.buscarFolha(tenantId, competencia, tipo);
     return this._listarItensPorFolhaId(tenantId, folha.id, query, skip, take);
@@ -486,6 +561,22 @@ class FolhaService {
       where: { id: folha.id },
       data: { status: 'PROCESSADA' },
     });
+  }
+
+  async excluir(tenantId, competencia, tipo) {
+    // somente permite exclusão de folhas que não estejam fechadas
+    const folha = await this.buscarFolha(tenantId, competencia, tipo);
+    if (folha.status === 'FECHADA') throw Errors.VALIDATION('Não é possível excluir folha fechada.');
+
+    // apaga itens e verbas manualmente porque não há cascade na relação
+    await prisma.itemFolhaVerba.deleteMany({
+      where: { itemFolha: { folhaPagamentoId: folha.id } },
+    });
+    await prisma.itemFolha.deleteMany({
+      where: { folhaPagamentoId: folha.id },
+    });
+    await prisma.folhaPagamento.delete({ where: { id: folha.id } });
+    return { success: true };
   }
 
   async holerite(tenantId, servidorId, competencia, tipo) {

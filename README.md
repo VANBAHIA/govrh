@@ -305,7 +305,7 @@ Content-Type: application/json
 | GET | `/ponto/escalas` | Escalas de trabalho |
 | POST | `/ponto/escalas` | Criar escala |
 | POST | `/ponto/escalas/:id/vincular` | Vincular servidor à escala |
-| GET | `/ponto/espelho/:servidorId/:mes` | Espelho de ponto (ex: `2026-01`) |
+| GET | `/ponto/espelho/:servidorId/:mes` | Espelho de ponto (ex: `2026-01`) – aceita tanto o UUID quanto a matrícula do servidor |
 | POST | `/ponto/lancamento` | Lançar registro de ponto |
 | POST | `/ponto/importar` | Importar registros em lote (REP-P) |
 | PUT | `/ponto/:id/abono` | Abonar registro |

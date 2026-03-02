@@ -304,7 +304,7 @@ model Tenant {
   ativo            Boolean   @default(true)
   plano            String    @default("BASICO") @db.VarChar(50)
   limiteServidores Int       @default(500)
-  exercicioAtual   Int // Ano fiscal corrente
+  exercicioAtual Int @default(2026)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
