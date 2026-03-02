@@ -637,6 +637,8 @@ model Servidor {
   pne            Boolean     @default(false)
   tipoPne        String?     @db.VarChar(200)
   fotoUrl        String?     @db.VarChar(500)
+  biometria BiometriaFacial?
+  
 
   // Documentos trabalhistas
   numeroCtps    String? @db.VarChar(20)
@@ -685,6 +687,24 @@ model Servidor {
   @@unique([tenantId, cpf])
   @@index([tenantId])
   @@map("servidores")
+}
+
+
+model BiometriaFacial {
+  id            String   @id @default(uuid())
+  servidorId    String   @unique
+  tenantId      String
+  embedding     Json     // array de 128 floats
+  modelo        String   @default("face-api.js")
+  capturaEm     DateTime @default(now())
+  atualizadaEm  DateTime @updatedAt
+  ativo         Boolean  @default(true)
+  cadastradoPor String
+
+  servidor Servidor @relation(fields: [servidorId], references: [id])
+
+  @@index([tenantId])
+  @@map("biometrias_faciais")
 }
 
 // ─────────────────────────────────────────────────────────────

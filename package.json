@@ -10,6 +10,8 @@
     "db:migrate:prod": "prisma migrate deploy",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
+    "create:escala": "node scripts/create-escala.js",
+    "list:escalas": "node scripts/list-escalas.js",
     "db:generate": "prisma generate",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",

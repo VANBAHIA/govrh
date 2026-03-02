@@ -18,6 +18,9 @@ class PontoController {
   async atualizarEscala(req, res, next) {
     try { ok(res, await this.service.atualizarEscala(req.tenantId, req.params.id, req.body)); } catch (e) { next(e); }
   }
+  async excluirEscala(req, res, next) {
+    try { noContent(res, await this.service.excluirEscala(req.tenantId, req.params.id)); } catch (e) { next(e); }
+  }
   async vincularServidorEscala(req, res, next) {
     try { ok(res, await this.service.vincularServidorEscala(req.tenantId, req.params.id, req.body)); } catch (e) { next(e); }
   }

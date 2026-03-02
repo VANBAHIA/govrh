@@ -11,6 +11,7 @@ router.use(authenticate);
 router.get('/escalas',                       authorize('ponto', 'read'),   ctrl.listarEscalas);
 router.post('/escalas',                      authorize('ponto', 'create'), auditLog('escalas', 'create'), ctrl.criarEscala);
 router.put('/escalas/:id',                   authorize('ponto', 'update'), ctrl.atualizarEscala);
+router.delete('/escalas/:id',                authorize('ponto', 'delete'), auditLog('escalas', 'delete'), ctrl.excluirEscala);
 router.post('/escalas/:id/vincular',         authorize('ponto', 'update'), ctrl.vincularServidorEscala);
 
 // Registro de ponto

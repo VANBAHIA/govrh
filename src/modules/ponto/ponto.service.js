@@ -20,6 +20,12 @@ class PontoService {
     return prisma.escalaTrabalho.update({ where: { id }, data: dados });
   }
 
+  async excluirEscala(tenantId, id) {
+    const e = await prisma.escalaTrabalho.findFirst({ where: { id, tenantId } });
+    if (!e) throw Errors.NOT_FOUND('Escala');
+    return prisma.escalaTrabalho.delete({ where: { id } });
+  }
+
   async vincularServidorEscala(tenantId, escalaId, { servidorId, dataInicio, dataFim }) {
     const srv = await prisma.servidor.findFirst({ where: { id: servidorId, tenantId } });
     if (!srv) throw Errors.NOT_FOUND('Servidor');
