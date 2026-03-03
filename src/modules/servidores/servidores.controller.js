@@ -3,6 +3,23 @@ const { ok, created, noContent, paginate } = require('../../shared/utils/respons
 const { parsePagination } = require('../../shared/utils/pagination');
 
 class ServidorController {
+
+    // ── Biometria facial ─────────────────────────────────────────
+    async registrarBiometriaFacial(req, res, next) {
+      try {
+        // Aqui você deveria extrair o embedding da imagem (req.file.buffer)
+        // Exemplo: const embedding = await extrairEmbedding(req.file.buffer)
+        // Por enquanto, salva o buffer como embedding (ajuste para produção)
+        const embedding = req.file ? req.file.buffer.toString('base64') : null;
+        if (!embedding) throw new Error('Imagem não enviada');
+        const biometria = await this.service.registrarBiometriaFacial(
+          req.tenantId,
+          req.params.id,
+          { embedding, modelo: 'imagem', cadastradoPor: req.user?.id || 'sistema' }
+        );
+        created(res, biometria);
+      } catch (err) { next(err); }
+    }
   constructor() {
     this.service = new ServidorService();
     Object.getOwnPropertyNames(ServidorController.prototype)

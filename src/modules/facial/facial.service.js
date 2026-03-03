@@ -1,7 +1,9 @@
 const path = require('path')
 const Jimp = require('jimp')
-const tf = require('@tensorflow/tfjs-node')
-const faceapi = require('@vladmandic/face-api')
+const tf = require('@tensorflow/tfjs')
+require('@tensorflow/tfjs-backend-cpu')
+require('@tensorflow/tfjs-backend-webgl')
+const faceapi = require('@vladmandic/face-api/dist/face-api.node-wasm.js')
 
 let modelosCarregados = false
 
@@ -114,3 +116,4 @@ function identificarNaBiometrias(embeddingFrame, biometrias, threshold = 0.45) {
 }
 
 module.exports = { extrairEmbedding, calcularDistancia, identificarNaBiometrias }
+

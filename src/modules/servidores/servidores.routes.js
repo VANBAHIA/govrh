@@ -57,4 +57,14 @@ router.post('/:id/documentos', authorize('servidores', 'update'), auditLog('serv
 router.get('/:id/progressoes', authorize('progressao',  'read'), ctrl.progressoes);
 router.get('/:id/extrato',     authorize('servidores',  'read'), ctrl.extrato);
 
+// ── Biometria facial ──────────────────────────────────────────
+const multer = require('multer');
+const upload = multer();
+router.post('/:id/biometria-facial',
+  authorize('servidores', 'update'),
+  auditLog('servidores', 'biometria_create'),
+  upload.single('biometria'),
+  ctrl.registrarBiometriaFacial
+);
+
 module.exports = router;

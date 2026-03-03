@@ -11,18 +11,49 @@ class PontoService {
   }
 
   async criarEscala(tenantId, dados) {
-    return prisma.escalaTrabalho.create({ data: { ...dados, tenantId } });
+    // Remover qualquer campo legado `turno` que possa ter vindo do cliente
+    const { turno, ...clean } = dados;
+    const escalaDados = {
+      ...clean,
+      tenantId,
+      turnos: dados.turnos || [], // Pode vir como array
+      tipo: dados.tipo || 'FIXO',
+      cargaHorariaSemanal: dados.cargaHorariaSemanal || 40,
+    };
+    return prisma.escalaTrabalho.create({ data: escalaDados });
   }
 
   async atualizarEscala(tenantId, id, dados) {
-    const e = await prisma.escalaTrabalho.findFirst({ where: { id, tenantId } });
+    // load without tenant filter to determine ownership
+    const e = await prisma.escalaTrabalho.findUnique({ where: { id } });
     if (!e) throw Errors.NOT_FOUND('Escala');
-    return prisma.escalaTrabalho.update({ where: { id }, data: dados });
+    if (e.tenantId !== tenantId) {
+      // if it belongs to system (tenantId null) forbid; otherwise pretend not found
+      if (e.tenantId === null) {
+        throw Errors.FORBIDDEN('Escala de sistema não pode ser alterada.');
+      }
+      throw Errors.NOT_FOUND('Escala');
+    }
+
+    const { turno, ...clean } = dados;
+    const escalaDados = {
+      ...clean,
+      turnos: dados.turnos || [], // Pode vir como array
+      tipo: dados.tipo || 'FIXO',
+      cargaHorariaSemanal: dados.cargaHorariaSemanal || 40,
+    };
+    return prisma.escalaTrabalho.update({ where: { id }, data: escalaDados });
   }
 
   async excluirEscala(tenantId, id) {
-    const e = await prisma.escalaTrabalho.findFirst({ where: { id, tenantId } });
+    const e = await prisma.escalaTrabalho.findUnique({ where: { id } });
     if (!e) throw Errors.NOT_FOUND('Escala');
+    if (e.tenantId !== tenantId) {
+      if (e.tenantId === null) {
+        throw Errors.FORBIDDEN('Escala de sistema não pode ser excluída.');
+      }
+      throw Errors.NOT_FOUND('Escala');
+    }
     return prisma.escalaTrabalho.delete({ where: { id } });
   }
 

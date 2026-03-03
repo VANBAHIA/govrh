@@ -29,6 +29,24 @@ async function _garantirUmPrincipal(model, servidorId, novoId) {
 
 class ServidorService {
 
+  // ── Biometria facial ─────────────────────────────────────────
+  async registrarBiometriaFacial(tenantId, servidorId, { embedding, modelo = "face-api.js", cadastradoPor }) {
+    await this.buscarPorId(tenantId, servidorId);
+    // Remove biometria anterior se existir
+    await prisma.biometriaFacial.deleteMany({ where: { servidorId, tenantId } });
+    // Cria nova biometria
+    return prisma.biometriaFacial.create({
+      data: {
+        servidorId,
+        tenantId,
+        embedding,
+        modelo,
+        cadastradoPor,
+        ativo: true,
+      },
+    });
+  }
+
   async listar(tenantId, filtros, skip, take) {
     const vinculoWhere = { atual: true };
     if (filtros.situacao)  vinculoWhere.situacaoFuncional = filtros.situacao;
@@ -138,7 +156,10 @@ class ServidorService {
   async buscarPorId(tenantId, id) {
     const servidor = await prisma.servidor.findFirst({
       where: { id, tenantId },
-      include: SERVIDOR_COMPLETO_INCLUDE,
+      include: {
+        ...SERVIDOR_COMPLETO_INCLUDE,
+        biometria: true,
+      },
     });
     if (!servidor) throw Errors.NOT_FOUND('Servidor');
     return servidor;
